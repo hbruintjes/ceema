@@ -46,11 +46,18 @@ ceema::future<ContactPtr> ContactStore::fetch_contact(ceema::client_id id) {
 
 void ContactStore::update_buddies(PurpleAccount* account) const {
     for(auto& contact_pair: m_idmap) {
-        auto idStr = contact_pair.second->id().toString();
+
+        auto idStr = contact_pair.first.toString();
         PurpleBuddy* buddy = purple_find_buddy(account, idStr.c_str());
         if (buddy) {
-            purple_blist_node_set_string(&buddy->node, "public-key",
-                                         ceema::hex_encode(contact_pair.second->pk()).c_str());
+            if (!contact_pair.second) {
+                purple_blist_node_set_string(&buddy->node, "public-key",
+                                             "!");
+            } else {
+                purple_blist_node_set_string(&buddy->node, "public-key",
+                                             ceema::hex_encode(
+                                                     contact_pair.second->pk()).c_str());
+            }
         }
     }
 }
@@ -80,8 +87,13 @@ void ContactStore::load_buddies(PurpleAccount* account) {
         if (!has_contact(id)) {
             const char *pk = purple_blist_node_get_string(&buddy->node, "public-key");
             if (pk) {
-                std::string pk_string{pk};
-                add_contact(ceema::Contact(id, ceema::public_key{ceema::hex_decode(pk_string)}));
+                if (*pk == '!') {
+                    m_idmap.emplace(id, nullptr);
+                } else {
+                    std::string pk_string{pk};
+                    add_contact(ceema::Contact(id, ceema::public_key{
+                            ceema::hex_decode(pk_string)}));
+                }
             }
         }
 
