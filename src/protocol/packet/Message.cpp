@@ -214,9 +214,9 @@ namespace ceema {
                 return os << "GROUP_LEAVE";
             case MessageType::NONE:
                 return os << "<NONE>";
-            default:
-                return os << "<" << std::hex << static_cast<unsigned>(type) << ">";
         }
-        throw std::domain_error("");
+        os << "<MessageType 0x" << std::hex << static_cast<unsigned>(type) << ">";
+        os.setstate(std::ostream::failbit);
+        return os;
     }
 }
