@@ -62,8 +62,6 @@ namespace ceema {
 		if (fdReady == 0) {
 			LOG_DEBUG(ceema::logging::loggerNetwork, "Timeout on select");
 		} else if (fdReady < 0) {
-			LOG_ERROR(ceema::logging::loggerNetwork,
-					  "Error on select: " << format_error());
             throw socket_exception();
 		}
 
@@ -84,8 +82,6 @@ namespace ceema {
                 if (total == 0 && would_block()) {
                     return 0;
                 }
-				LOG_ERROR(ceema::logging::loggerNetwork,
-						  "Error sending data: " << format_error());
 				throw socket_exception();
 			}
 			total += n;
@@ -100,8 +96,6 @@ namespace ceema {
             if (would_block()) {
                 return -1;
             }
-			LOG_ERROR(ceema::logging::loggerNetwork,
-					  "Error receiving data: " << format_error());
             throw socket_exception();
 		}
 		return received;
