@@ -35,6 +35,7 @@ namespace ceema {
     }
 
     future<byte_vector> HttpClient::get(std::string const& url) {
+        m_bufferedTransfer = HttpBufferTransfer();
         get(url, &m_bufferedTransfer);
         return m_bufferedTransfer.get_future();
     }
@@ -57,6 +58,7 @@ namespace ceema {
     }
 
     future<byte_vector> HttpClient::post(std::string url, byte_vector data) {
+        m_bufferedTransfer = HttpBufferTransfer();
         m_bufferedTransfer.set_buffer(std::move(data));
         post(url, &m_bufferedTransfer);
         return m_bufferedTransfer.get_future();
@@ -85,6 +87,7 @@ namespace ceema {
     }
 
     future<byte_vector> HttpClient::postFile(std::string url, byte_vector data, std::string const& filename) {
+        m_bufferedTransfer = HttpBufferTransfer();
         m_bufferedTransfer.set_buffer(std::move(data));
         postFile(url, &m_bufferedTransfer, filename);
         return m_bufferedTransfer.get_future();
