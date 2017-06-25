@@ -18,8 +18,8 @@ public:
     }
 
     Command(Command const&) = delete;
-    Command(Command && other) {
-        std::swap(m_id, other.m_id);
+    Command(Command && other) : m_id(other.m_id) {
+        other.m_id = 0;
     }
 
     Command& operator=(Command const&) = delete;
