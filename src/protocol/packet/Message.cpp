@@ -49,7 +49,7 @@ namespace ceema {
             throw protocol_exception("Invalid Message size");
         }
 
-        LOG_DEBUG(logging::loggerRoot, "Decoding message data: " << packet);
+        LOG_TRACE(logging::loggerRoot, "Decoding message data: " << packet);
 
         Message m;
         auto packet_iter = packet.begin() + sizeof(PacketType);
@@ -129,7 +129,7 @@ namespace ceema {
             throw std::runtime_error("Error during message construction");
         }
 
-        LOG_DBG("Message encoded as " << packet);
+        LOG_TRACE(logging::loggerRoot, "Message encoded as " << packet);
 
         return packet;
     }
@@ -143,7 +143,7 @@ namespace ceema {
         htole(m_message_type, type_data.data());
         byte_vector payload_data = m_payload.serialize();
         payload_data.insert(payload_data.begin(), type_data.begin(), type_data.end());
-        LOG_DBG("Encrypting payload " << payload_data);
+        LOG_TRACE(logging::loggerRoot, "Encrypting payload " << payload_data);
         pkcs7::add_padding(payload_data);
         payload_data.resize(payload_data.size() + crypto_box_MACBYTES);
         if (!crypto::box::encrypt_inplace(payload_data, m_nonce, recipient.pk(), sender.sk())) {
@@ -168,12 +168,12 @@ namespace ceema {
         m_payloadData.resize(m_payloadData.size() - crypto_box_MACBYTES);
         pkcs7::strip_padding(m_payloadData);
 
-        LOG_DEBUG(logging::loggerRoot, "Decrypted message data: " << m_payloadData);
+        LOG_TRACE(logging::loggerRoot, "Decrypted message data: " << m_payloadData);
 
         m_payload = MessagePayload::deserialize(m_payloadData);
         m_message_type = m_payload.get_type();
 
-        LOG_DEBUG(logging::loggerRoot, "Decoded message of type " << m_message_type);
+        LOG_TRACE(logging::loggerRoot, "Decoded message of type " << m_message_type);
 
         m_payloadData.clear();
     }
