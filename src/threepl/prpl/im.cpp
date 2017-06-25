@@ -6,6 +6,60 @@
 
 #include <threepl/ThreeplConnection.h>
 
+/**
+ * Sends current avatar to who if not send since last update,
+ * and who is in the buddy list
+ * @param who ID of user to send avatar to
+ */
+void send_avatar(ThreeplConnection* connection, ceema::client_id who) {
+    PurpleAccount* account = connection->acct();
+
+    PurpleBuddy* buddy = purple_find_buddy(account, who.toString().c_str());
+    if (!buddy) {
+        return;
+    }
+
+    auto img = purple_buddy_icons_find_account_icon(account);
+    if (!img) {
+        return;
+    }
+    std::uint8_t const *avatar_data = static_cast<std::uint8_t const*>(purple_imgstore_get_data(img));
+    auto avatar_len = purple_imgstore_get_size(img);
+    time_t icon_ts = purple_buddy_icons_get_account_icon_timestamp(account);
+
+    const char* str_timestamp = purple_blist_node_get_string(&buddy->node, "icon-ts");
+    time_t timestamp = str_timestamp ? std::strtoul(str_timestamp, nullptr, 10) : 0;
+
+    if (timestamp < icon_ts) {
+        // Send updated icon
+        auto key = ceema::crypto::generate_shared_key();
+        ceema::byte_vector data{avatar_data, avatar_data+avatar_len};
+        ceema::BlobUploadTransfer *transfer = new ceema::BlobUploadTransfer(data, ceema::BlobType::ICON, key);
+        transfer->get_future().next([connection, who](ceema::future<ceema::Blob> fut) {
+            ceema::Blob blob;
+            try {
+                blob = fut.get();
+            } catch (std::exception& e) {
+                LOG_DBG("Failed to upload avatar: " << e.what());
+                throw;
+            }
+
+            ceema::PayloadIcon payload{blob.id, blob.size, blob.key};
+            return connection->send_message(who, payload);
+        }).next([](ceema::future<std::unique_ptr<ceema::Message>> fut) {
+            try {
+                fut.get();
+            } catch (std::exception& e) {
+                LOG_DBG("Failed to send avatar: " << e.what());
+            }
+        });
+        connection->blob_API().upload(transfer);
+        purple_blist_node_set_string(&buddy->node, "icon-ts", std::to_string(icon_ts).c_str());
+    }
+
+    purple_imgstore_unref(img);
+}
+
 int threepl_send_im(PurpleConnection* gc, const char *who, const char *message, PurpleMessageFlags) {
     ThreeplConnection* connection = static_cast<ThreeplConnection*>(purple_connection_get_protocol_data(gc));
 
@@ -27,11 +81,13 @@ int threepl_send_im(PurpleConnection* gc, const char *who, const char *message, 
         return 0;
     }
 
+    send_avatar(connection, client);
+
     auto msg_fut = connection->send_message(client, payload);
     if (!msg_fut) {
         return -ENOTCONN;
     } else {
-        msg_fut.next([connection, msgtxt = std::basic_string<char>(message)](
+        msg_fut.next([connection, msgtxt = std::string(message)](
                 ceema::future<std::unique_ptr<ceema::Message>> fut){
             try {
                 auto msg = fut.get();

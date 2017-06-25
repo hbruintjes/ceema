@@ -178,8 +178,13 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
                 onMsgGroupText(msg, group, payload);
             }
             break; }
-        default:
-            break;
+        default: {
+            std::string message = formatstr() << "Received message of type " << msg.payloadType() << " which is not supported";
+            serv_got_im(m_connection.connection(), msg.sender().toString().c_str(),
+                        message.c_str(),
+                        static_cast<PurpleMessageFlags>(PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM|PURPLE_MESSAGE_ERROR),
+                        msg.time());
+            break; }
     }
 }
 

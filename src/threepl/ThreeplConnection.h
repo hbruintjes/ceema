@@ -77,6 +77,10 @@ public:
         return m_identAPI;
     }
 
+    ceema::BlobAPI& blob_API() {
+        return m_blobAPI;
+    }
+
     PrplBlobUploadTransfer* new_xfer(PurpleConnection* gc, const char *who) {
         return new PrplBlobUploadTransfer(m_blobAPI, ceema::BlobType::FILE, gc, who);
     }
