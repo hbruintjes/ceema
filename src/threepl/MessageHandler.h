@@ -80,4 +80,19 @@ private:
     void recv(ceema::Message& msg);
     void send(ceema::Message& msg);
 
+    bool onMsgStatus(ceema::Message const& msg, ceema::PayloadMessageStatus const& payload);
+    bool onMsgTyping(ceema::Message const& msg, ceema::PayloadTyping const& payload);
+    bool onMsgText(ceema::Message const& msg, ceema::PayloadText const& payload);
+    bool onMsgLocation(ceema::Message const& msg, ceema::PayloadLocation const& payload);
+    bool onMsgIcon(ceema::Message const& msg, ceema::PayloadIcon const& payload);
+    bool onMsgFile(ceema::Message const& msg, ceema::PayloadFile const& payload);
+    bool onMsgPicture(ceema::Message const& msg, ceema::PayloadPicture const& payload);
+    bool onMsgAudio(ceema::Message const& msg, ceema::PayloadAudio const& payload);
+    bool onMsgVideo(ceema::Message const& msg, ceema::PayloadVideo const& payload);
+
+    bool onMsgGroupTitle(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupTitle const& payload);
+    bool onMsgGroupMembers(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupMembers const& payload);
+    bool onMsgGroupSync(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupSync const& payload);
+    bool onMsgGroupLeave(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupLeave const& payload);
+    bool onMsgGroupText(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupText const& payload);
 };
