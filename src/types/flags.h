@@ -35,7 +35,7 @@ namespace ceema {
 
         explicit constexpr Flags() : value(FlagType(0)) {}
         explicit /*constexpr*/ Flags(FlagType val) : value(val) {}
-        explicit constexpr Flags(std::initializer_list<FlagEnum> vals) {
+        explicit constexpr Flags(std::initializer_list<FlagEnum> vals) : value(0) {
             for(auto val: vals) {
                 value |= static_cast<FlagType>(val);
             }
