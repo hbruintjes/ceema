@@ -194,4 +194,31 @@ namespace ceema {
         return res;
     }
 
+    constexpr unsigned PayloadIconSize = blob_id::array_size + sizeof(blob_size) + nonce::array_size;
+
+    PayloadIcon PayloadIcon::deserialize(byte_vector::const_iterator& payload_data, std::size_t size) {
+        if (size != PayloadPictureSize) {
+            throw std::runtime_error("Invalid icon payload");
+        }
+
+        PayloadIcon payload;
+        payload_data = copy_iter(payload_data, payload.id);
+        letoh(payload.size, &*payload_data);
+        payload_data += sizeof(payload.size);
+        payload_data = copy_iter(payload_data, payload.n);
+        return payload;
+    }
+
+    byte_vector PayloadIcon::serialize() {
+        byte_vector res;
+        res.resize(PayloadPictureSize);
+
+        auto iter = res.begin();
+        iter = std::copy(id.begin(), id.end(), iter);
+        htole(size, &*iter);
+        iter += sizeof(size);
+        iter = std::copy(n.begin(), n.end(), iter);
+
+        return res;
+    }
 }

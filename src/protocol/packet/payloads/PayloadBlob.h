@@ -142,4 +142,24 @@ namespace ceema {
         byte_vector serialize();
     };
 
+    /**
+     * Icon is sent via blob, encrypted using recipient public key
+     * with provided nonce.
+     */
+    struct PayloadIcon {
+        static constexpr MessageType Type = MessageType::ICON;
+        static /*constexpr*/ MessageFlags default_flags() {
+            return MessageFlags{};
+        }
+
+        /** ID of blob containing data */
+        blob_id id;
+        /** Size of blob in bytes */
+        blob_size size;
+        /** Nonce used to encrypt the blob with */
+        nonce n;
+
+        static PayloadIcon deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
+        byte_vector serialize();
+    };
 }
