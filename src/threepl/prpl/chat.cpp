@@ -117,7 +117,13 @@ void threepl_chat_invite(PurpleConnection* gc, int id, const char* message, cons
     }
 
     //TODO: check if not already there, do not add twice
-    ceema::client_id client = ceema::client_id::fromString(who);
+    ceema::client_id client;
+    try {
+        client = ceema::client_id::fromString(who);
+    } catch(std::exception& e) {
+        purple_notify_error(gc, "Error", "Unable to invite user", e.what());
+        return;
+    }
     if (group_data->add_member(client)) {
         // Added new member, put in group
         // TODO: protocol message packet for sync

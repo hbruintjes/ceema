@@ -13,7 +13,19 @@ int threepl_send_im(PurpleConnection* gc, const char *who, const char *message, 
     ceema::PayloadText payload;
     payload.m_text = text;
 
-    auto msg_fut = connection->send_message(ceema::client_id::fromString(who), payload);
+    ceema::client_id client;
+    try {
+        client = ceema::client_id::fromString(who);
+    } catch(std::exception& e) {
+        gchar *errMsg = g_strdup_printf("Unable to send message to %s: %s", who, e.what());
+        if (!purple_conv_present_error(who, connection->acct(), errMsg)) {
+            purple_notify_error(connection->connection(), "Error sending message", "Unable to send message", errMsg);
+        }
+        g_free(errMsg);
+        return 0;
+    }
+
+    auto msg_fut = connection->send_message(client, payload);
     if (!msg_fut) {
         return -ENOTCONN;
     } else {
@@ -28,9 +40,9 @@ int threepl_send_im(PurpleConnection* gc, const char *who, const char *message, 
                     purple_conv_im_write(PURPLE_CONV_IM(conv), who_rcpt.c_str(), msgtxt.c_str(), PURPLE_MESSAGE_SEND, msg->time());
                 }
             } catch (message_exception& e) {
-                const char* who_err = e.id().toString().c_str();
-                gchar *errMsg = g_strdup_printf("Unable to send message to %s: %s", who_err, e.what());
-                if (!purple_conv_present_error(who_err, connection->acct(), errMsg)) {
+                std::string who_err = e.id().toString();
+                gchar *errMsg = g_strdup_printf("Unable to send message to %s: %s", who_err.c_str(), e.what());
+                if (!purple_conv_present_error(who_err.c_str(), connection->acct(), errMsg)) {
                     purple_notify_error(connection->connection(), "Error sending message", "Unable to send message", errMsg);
                 }
                 g_free(errMsg);
