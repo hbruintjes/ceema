@@ -21,11 +21,11 @@ int threepl_send_im(PurpleConnection* gc, const char *who, const char *message, 
                 ceema::future<std::unique_ptr<ceema::Message>> fut){
             try {
                 auto msg = fut.get();
-                const char* who_rcpt = msg->recipient().toString().c_str();
+                std::string who_rcpt = msg->recipient().toString();
                 PurpleConversation* conv = purple_find_conversation_with_account(
-                        PURPLE_CONV_TYPE_IM, who_rcpt, connection->acct());
+                        PURPLE_CONV_TYPE_IM, who_rcpt.c_str(), connection->acct());
                 if (conv) {
-                    purple_conv_im_write(PURPLE_CONV_IM(conv), who_rcpt, msgtxt.c_str(), PURPLE_MESSAGE_SEND, msg->time());
+                    purple_conv_im_write(PURPLE_CONV_IM(conv), who_rcpt.c_str(), msgtxt.c_str(), PURPLE_MESSAGE_SEND, msg->time());
                 }
             } catch (message_exception& e) {
                 const char* who_err = e.id().toString().c_str();
