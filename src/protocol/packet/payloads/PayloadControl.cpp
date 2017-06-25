@@ -73,6 +73,8 @@ namespace ceema {
             case MessageStatus::DISAGREED:
                 return os << "DISAGREED";
         }
-        throw std::domain_error("");
+        os << "<MessageStatus 0x" << std::hex << static_cast<unsigned>(status) << ">";
+        os.setstate(std::ostream::failbit);
+        return os;
     }
 }

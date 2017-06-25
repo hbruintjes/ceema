@@ -70,7 +70,9 @@ namespace ceema {
             case PacketType::KEEPALIVE_ACK:
                 return os << "KEEPALIVE_ACK";
         }
-        throw std::domain_error("");
+        os << "<PacketType 0x" << std::hex << static_cast<unsigned>(type) << ">";
+        os.setstate(std::ostream::failbit);
+        return os;
     }
 
 }
