@@ -56,6 +56,7 @@ namespace ceema {
             for(auto c: str) {
                 // Convert to upper case for ease of use
                 *iter = static_cast<std::uint8_t>(toupper(c));
+                ++iter;
             }
             return id;
         }
