@@ -22,6 +22,7 @@
 #include "KeepAlive.h"
 
 #include "logging/logging.h"
+#include <types/formatstr.h>
 
 namespace ceema {
 
@@ -45,10 +46,8 @@ namespace ceema {
                 return std::make_unique<KeepAlive>(
                         KeepAlive::fromPacket(type, data));
             default:
-                LOG_ERROR(logging::loggerProtocol,
-                          "Invalid packet type " << std::hex
-                                                 << (std::uint32_t) type);
-                throw protocol_exception("Unexpect packet type");
+                throw protocol_exception(formatstr() << "Unexpect packet type: 0x" <<
+                                         std::hex << std::to_string(static_cast<unsigned>(type)));
         }
     }
 
