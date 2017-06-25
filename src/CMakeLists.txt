@@ -53,7 +53,7 @@ add_library(ceema SHARED
         socket/socket.h socket/socket.cpp
 
         types/bytes.h types/slice.h types/flags.h
-        protocol/data/Crypto.h protocol/packet/payloads/PayloadGroupControl.cpp api/BlobTransfer.h protocol/packet/payloads/PayloadText.h protocol/packet/payloads/PayloadBlob.h protocol/packet/payloads/PayloadPoll.h protocol/packet/payloads/PayloadControl.h protocol/packet/payloads/PayloadGroupControl.h protocol/packet/payloads/PayloadGroup.h protocol/packet/payloads/PayloadGroup.cpp protocol/packet/payloads/PayloadText.cpp protocol/packet/payloads/PayloadBlob.cpp protocol/packet/payloads/PayloadPoll.cpp protocol/packet/payloads/PayloadControl.cpp types/iter.h protocol/packet/MessageFlag.h protocol/packet/MessageFlag.cpp)
+        protocol/data/Crypto.h protocol/packet/payloads/PayloadGroupControl.cpp api/BlobTransfer.h protocol/packet/payloads/PayloadText.h protocol/packet/payloads/PayloadBlob.h protocol/packet/payloads/PayloadPoll.h protocol/packet/payloads/PayloadControl.h protocol/packet/payloads/PayloadGroupControl.h protocol/packet/payloads/PayloadGroup.h protocol/packet/payloads/PayloadGroup.cpp protocol/packet/payloads/PayloadText.cpp protocol/packet/payloads/PayloadBlob.cpp protocol/packet/payloads/PayloadPoll.cpp protocol/packet/payloads/PayloadControl.cpp types/iter.h protocol/packet/MessageFlag.h protocol/packet/MessageFlag.cpp types/formatstr.h)
 
 set_target_properties(ceema PROPERTIES
     # create *nix style library versions + symbolic links
