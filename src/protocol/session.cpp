@@ -164,12 +164,15 @@ namespace ceema {
     void Session::onReadyWrite() {
         LOG_TRACE(logging::loggerSession, "onReadyWrite " << m_writeBuffer.size());
         while (m_writeBuffer.size()) {
-            // Send data in chunks of 4K
-            size_t sendSize = std::min(m_writeBuffer.size(), std::size_t(4096u));
+            // TODO: Send data in chunks of 4K
+            auto sendSize = m_writeBuffer.size();
             try {
                 if (m_socket.send(m_writeBuffer.data(), sendSize) == sendSize) {
                     LOG_TRACE(logging::loggerSession, "Written " << sendSize << " bytes");
                     m_writeBuffer.erase(m_writeBuffer.begin(), m_writeBuffer.begin()+sendSize);
+                } else {
+                    // Socket became not-ready
+                    break;
                 }
             } catch(socket_exception&) {
                 terminate();
