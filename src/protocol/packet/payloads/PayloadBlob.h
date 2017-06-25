@@ -156,8 +156,8 @@ namespace ceema {
         blob_id id;
         /** Size of blob in bytes */
         blob_size size;
-        /** Nonce used to encrypt the blob with */
-        nonce n;
+        /** Key used to encrypt the blob with */
+        shared_key key;
 
         static PayloadIcon deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
         byte_vector serialize();

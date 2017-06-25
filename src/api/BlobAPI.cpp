@@ -133,6 +133,8 @@ namespace ceema {
                 return nonceGroupImage;
             case BlobType::GROUP_ICON:
                 return nonceGroupIcon;
+            case BlobType::ICON:
+                return nonceIcon;
         }
         throw std::domain_error("");
     }
@@ -160,5 +162,6 @@ namespace ceema {
     nonce BlobAPI::nonceFileThumb{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2};
     nonce BlobAPI::nonceGroupImage{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
     nonce BlobAPI::nonceGroupIcon{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
+    nonce BlobAPI::nonceIcon{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
 
 }

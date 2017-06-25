@@ -27,7 +27,7 @@ namespace ceema {
         TEXT = 0x01,
         PICTURE = 0x02,
         LOCATION = 0x10,
-        ICON = 0x12,
+        ICON = 0x18,
         VIDEO = 0x13,
         AUDIO = 0x14,
         POLL = 0x15,

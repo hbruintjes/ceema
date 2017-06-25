@@ -53,7 +53,7 @@ namespace threepl {
     void init_logging() {
         sink = PrplSink::create();
         l3pp::Logger::getRootLogger()->addSink(sink);
-        l3pp::Logger::getRootLogger()->setLevel(l3pp::LogLevel::DEBUG);
+        l3pp::Logger::getRootLogger()->setLevel(l3pp::LogLevel::ALL);
     }
 
     void deinit_logging() {

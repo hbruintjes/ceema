@@ -85,6 +85,7 @@ namespace ceema {
                 PayloadVideo,
                 PayloadAudio,
                 PayloadFile,
+                PayloadIcon,
                 PayloadPoll,
                 PayloadPollVote,
                 PayloadMessageStatus,
@@ -98,7 +99,7 @@ namespace ceema {
 
                 PayloadGroupText,
                 PayloadGroupLocation,
-                PayloadGroupPicture,
+                //PayloadGroupPicture,
                 //PayloadGroupVideo,
                 //PayloadGroupAudio,
                 PayloadGroupFile

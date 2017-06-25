@@ -143,6 +143,23 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
                         payload.m_location.c_str(),
                         PURPLE_MESSAGE_RECV, msg.time());
             break; }
+        case ceema::MessageType::ICON: {
+            ceema::PayloadIcon const& payload = msg.payload<ceema::PayloadIcon>();
+
+            auto iconTransfer = new ceema::BlobDownloadTransfer(payload.id, ceema::BlobType::ICON, payload.key);
+            m_blobAPI.downloadFile(iconTransfer, payload.id);
+            iconTransfer->get_future().next([this, id{payload.id}, sender{msg.sender()}](ceema::future<ceema::byte_vector> fut) {
+                m_blobAPI.deleteBlob(id);
+                try {
+                    ceema::byte_vector data = fut.get();
+                    auto icon_data = g_memdup(data.data(), data.size());
+                    purple_buddy_icons_set_for_user(m_connection.acct(), sender.toString().c_str(), icon_data, data.size(), NULL);
+                } catch (std::exception& e) {
+                    LOG_DBG("Icon error " << e.what());
+                }
+            });
+
+            break; }
         case ceema::MessageType::FILE: {
             ceema::PayloadFile const& payload = msg.payload<ceema::PayloadFile>();
 

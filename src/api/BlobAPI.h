@@ -70,6 +70,7 @@ namespace ceema {
         static nonce nonceFileThumb;
         static nonce nonceGroupImage;
         static nonce nonceGroupIcon;
+        static nonce nonceIcon;
 
     public:
         BlobAPI(HttpManager& manager, bool useTLS);

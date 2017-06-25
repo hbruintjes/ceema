@@ -18,6 +18,7 @@
 #include <protocol/protocol.h>
 #include <logging/logging.h>
 #include <types/bytes.h>
+#include <types/formatstr.h>
 
 namespace ceema {
 
@@ -54,6 +55,8 @@ namespace ceema {
                 return MessagePayload(PayloadTyping::deserialize(payload_data, size));
             case MessageType::FILE:
                 return MessagePayload(PayloadFile::deserialize(payload_data, size));
+            case MessageType::ICON:
+                return MessagePayload(PayloadIcon::deserialize(payload_data, size));
             case MessageType::GROUP_MEMBERS:
                 return MessagePayload(PayloadGroupMembers::deserialize(payload_data, size));
             case MessageType::GROUP_TITLE:
@@ -64,8 +67,8 @@ namespace ceema {
                 return MessagePayload(PayloadGroupText::deserialize(payload_data, size));
             case MessageType::GROUP_LOCATION:
                 return MessagePayload(PayloadGroupLocation::deserialize(payload_data, size));
-            case MessageType::GROUP_PICTURE:
-                return MessagePayload(PayloadGroupPicture::deserialize(payload_data, size));
+//            case MessageType::GROUP_PICTURE:
+//                return MessagePayload(PayloadGroupPicture::deserialize(payload_data, size));
 //            case MessageType::GROUP_VIDEO:
 //                return MessagePayload(PayloadGroupVideo::deserialize(payload_data, size));
 //            case MessageType::GROUP_AUDIO:
@@ -81,7 +84,7 @@ namespace ceema {
 //            case MessageType::GROUP_LEAVE:
 //                return MessagePayload(PayloadGroupLeave::deserialize(payload_data, size));
             default:
-                throw std::runtime_error("Invalid type for MessagePayload " + std::to_string(static_cast<unsigned>(type)));
+                throw std::runtime_error(formatstr() << "Invalid type for MessagePayload 0x" << std::hex << static_cast<unsigned>(type));
         }
     }
 

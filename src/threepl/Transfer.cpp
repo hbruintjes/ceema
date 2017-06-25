@@ -173,7 +173,7 @@ gssize PrplUploadTransfer::on_xfer_write(const guchar * buffer, size_t size) {
 PrplDownloadTransfer::PrplDownloadTransfer(ceema::BlobAPI& api, ceema::blob_id id, ceema::blob_size size,
                                            PurpleConnection* gc, const char *who) :
         PrplTransfer(api, gc, who, PURPLE_XFER_RECEIVE), m_id(id) {
-    purple_xfer_set_size(xfer(), size + crypto_box_MACBYTES);
+    purple_xfer_set_size(xfer(), size);
 }
 
 PrplDownloadTransfer::~PrplDownloadTransfer() {

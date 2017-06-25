@@ -40,7 +40,8 @@ namespace ceema {
         FILE,
         FILE_THUMB,
         GROUP_IMAGE,
-        GROUP_ICON
+        GROUP_ICON,
+        ICON
     };
 
     /**

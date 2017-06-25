@@ -260,7 +260,8 @@ class PrplBlobDownloadTransfer : public PrplDownloadTransfer{
 public:
     PrplBlobDownloadTransfer(ceema::BlobAPI& api, ceema::Blob blob, ceema::BlobType type,
     PurpleConnection* gc, const char *who) :
-            PrplDownloadTransfer(api, blob.id, blob.size, gc, who), m_blob(blob), m_type(type) {}
+            PrplDownloadTransfer(api, blob.id, blob.size + (type == ceema::BlobType::ICON?0:crypto_box_MACBYTES), gc, who),
+            m_blob(blob), m_type(type) {}
 
 protected:
     bool decrypt() override {

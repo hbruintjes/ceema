@@ -194,10 +194,10 @@ namespace ceema {
         return res;
     }
 
-    constexpr unsigned PayloadIconSize = blob_id::array_size + sizeof(blob_size) + nonce::array_size;
+    constexpr unsigned PayloadIconSize = blob_id::array_size + sizeof(blob_size) + shared_key::array_size;
 
     PayloadIcon PayloadIcon::deserialize(byte_vector::const_iterator& payload_data, std::size_t size) {
-        if (size != PayloadPictureSize) {
+        if (size != PayloadIconSize) {
             throw std::runtime_error("Invalid icon payload");
         }
 
@@ -205,19 +205,19 @@ namespace ceema {
         payload_data = copy_iter(payload_data, payload.id);
         letoh(payload.size, &*payload_data);
         payload_data += sizeof(payload.size);
-        payload_data = copy_iter(payload_data, payload.n);
+        payload_data = copy_iter(payload_data, payload.key);
         return payload;
     }
 
     byte_vector PayloadIcon::serialize() {
         byte_vector res;
-        res.resize(PayloadPictureSize);
+        res.resize(PayloadIconSize);
 
         auto iter = res.begin();
         iter = std::copy(id.begin(), id.end(), iter);
         htole(size, &*iter);
         iter += sizeof(size);
-        iter = std::copy(n.begin(), n.end(), iter);
+        iter = std::copy(key.begin(), key.end(), iter);
 
         return res;
     }
