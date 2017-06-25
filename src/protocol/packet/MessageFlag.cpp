@@ -4,7 +4,7 @@
 
 #include "MessageFlag.h"
 
-#include <ostream>
+#include <types/formatstr.h>
 
 namespace ceema {
     std::ostream& operator<<(std::ostream& os, MessageFlag flag) {
@@ -20,6 +20,8 @@ namespace ceema {
             case MessageFlag::GROUP:
                 return os << "GROUP";
         }
-        throw std::domain_error("");
+        os << "<MessageFlag 0x" << std::hex << static_cast<unsigned>(flag) << ">";
+        os.setstate(std::ostream::failbit);
+        return os;
     }
 }
