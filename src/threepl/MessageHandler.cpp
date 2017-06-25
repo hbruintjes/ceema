@@ -194,7 +194,24 @@ void ThreeplMessageHandler::send(ceema::Message& msg) {
 }
 
 bool ThreeplMessageHandler::onMsgStatus(ceema::Message const& msg, ceema::PayloadMessageStatus const& payload) {
-    LOG_DBG("TODO: Got message status " << payload.m_status);
+    std::string message;
+    switch(payload.m_status) {
+        case ceema::MessageStatus::AGREED:
+            message = "Got agreement";
+            break;
+        case ceema::MessageStatus::DISAGREED:
+            message = "Got disagreement";
+            break;
+        default:
+            // Not much to do
+            return false;
+    }
+
+    serv_got_im(m_connection.connection(), msg.sender().toString().c_str(),
+                message.c_str(),
+                static_cast<PurpleMessageFlags>(PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM),
+                msg.time());
+
     return true;
 }
 
