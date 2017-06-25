@@ -21,8 +21,12 @@ void ThreeplMessageHandler::onRecvMessage(std::unique_ptr<ceema::Message> msg) {
 ceema::future<std::unique_ptr<ceema::Message>> ThreeplMessageHandler::sendMessage(std::unique_ptr<ceema::Message> msg) {
     if (m_contacts.has_contact(msg->recipient())) {
         ceema::promise<std::unique_ptr<ceema::Message>> prom;
-        send(*msg);
-        prom.set_value(std::move(msg));
+        try {
+            send(*msg);
+            prom.set_value(std::move(msg));
+        } catch (std::exception&) {
+            prom.set_exception(std::current_exception());
+        }
         return prom.get_future();
     } else {
         return enqueue(std::move(msg));
@@ -98,8 +102,11 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
     }
 
     try {
-        msg.decrypt(*m_contacts.get_contact(msg.sender()),
-                    m_connection.account());
+        auto contactptr = m_contacts.get_contact(msg.sender());
+        if (!contactptr) {
+            throw std::runtime_error("Unable to fetch contact key");
+        }
+        msg.decrypt(*contactptr, m_connection.account());
     } catch (std::exception& e) {
         purple_conv_present_error(msg.sender().toString().c_str(), m_connection.acct(), "Unable to decrypt incoming message:");
         purple_conv_present_error(msg.sender().toString().c_str(), m_connection.acct(), e.what());
@@ -229,6 +236,10 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
 
 void ThreeplMessageHandler::send(ceema::Message& msg) {
     // Encrypt and send
-    msg.encrypt(m_connection.account(), *m_contacts.get_contact(msg.recipient()));
+    auto contactptr = m_contacts.get_contact(msg.recipient());
+    if (!contactptr) {
+        throw std::runtime_error("Unable to fetch contact key");
+    }
+    msg.encrypt(m_connection.account(), *contactptr);
     m_connection.send_packet(msg);
 }
