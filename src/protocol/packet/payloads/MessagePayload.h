@@ -109,7 +109,7 @@ namespace ceema {
         MessagePayload() : m_payload(PayloadNone{}) {}
 
         template<typename Payload>
-        explicit MessagePayload(Payload const& payload) : m_payload(payload) {}
+        explicit MessagePayload(Payload && payload) : m_payload(std::forward<Payload>(payload)) {}
 
         template<typename Payload>
         auto& get() {

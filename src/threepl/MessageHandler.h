@@ -46,8 +46,7 @@ public:
     template<typename Payload>
     ceema::future<std::unique_ptr<ceema::Message>> sendPayload(ceema::Account const& sender, ceema::client_id const& recipient, Payload&& payload) {
         std::unique_ptr<ceema::Message> msg = std::make_unique<ceema::Message>(
-                sender.id(), recipient,
-                ceema::MessagePayload(payload));
+                sender.id(), recipient, std::forward<Payload>(payload));
         // Threepl does not make use of ACK, so no need to request one
         // If the network is down, Purple can't do much anyway
         msg->flags().set(ceema::MessageFlag::NO_ACK);

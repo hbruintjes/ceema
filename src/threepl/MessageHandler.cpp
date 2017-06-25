@@ -116,11 +116,11 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
     }
     switch(msg.payloadType()) {
         case ceema::MessageType::MESSAGE_STATUS: {
-            ceema::PayloadMessageStatus const& payload = msg.payload().get<ceema::PayloadMessageStatus>();
+            ceema::PayloadMessageStatus const& payload = msg.payload<ceema::PayloadMessageStatus>();
             LOG_DBG("TODO: Got message status " << payload.m_status);
             break; }
         case ceema::MessageType::CLIENT_TYPING: {
-            ceema::PayloadTyping const& payload = msg.payload().get<ceema::PayloadTyping>();
+            ceema::PayloadTyping const& payload = msg.payload<ceema::PayloadTyping>();
             if (payload.m_typing) {
                 serv_got_typing(m_connection.connection(), sender.c_str(), 0, PURPLE_TYPING);
             } else {
@@ -130,7 +130,7 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
         case ceema::MessageType::TEXT: {
             m_lastAgreeable = msg.id();
 
-            ceema::PayloadText const& payload = msg.payload().get<ceema::PayloadText>();
+            ceema::PayloadText const& payload = msg.payload<ceema::PayloadText>();
             serv_got_im(m_connection.connection(), sender.c_str(),
                         payload.m_text.c_str(),
                         PURPLE_MESSAGE_RECV, msg.time());
@@ -138,13 +138,13 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
         case ceema::MessageType::LOCATION: {
             m_lastAgreeable = msg.id();
 
-            ceema::PayloadLocation const& payload = msg.payload().get<ceema::PayloadLocation>();
+            ceema::PayloadLocation const& payload = msg.payload<ceema::PayloadLocation>();
             serv_got_im(m_connection.connection(), sender.c_str(),
                         payload.m_location.c_str(),
                         PURPLE_MESSAGE_RECV, msg.time());
             break; }
         case ceema::MessageType::FILE: {
-            ceema::PayloadFile const& payload = msg.payload().get<ceema::PayloadFile>();
+            ceema::PayloadFile const& payload = msg.payload<ceema::PayloadFile>();
 
             ceema::Blob fileBlob{payload.id, payload.size, payload.key};
             PrplBlobDownloadTransfer* transfer = new PrplBlobDownloadTransfer(m_blobAPI, fileBlob, ceema::BlobType::FILE,
@@ -179,7 +179,7 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
             }
             break; }
         case ceema::MessageType::GROUP_SYNC: {
-            ceema::PayloadGroupSync const& payload = msg.payload().get<ceema::PayloadGroupSync>();
+            ceema::PayloadGroupSync const& payload = msg.payload<ceema::PayloadGroupSync>();
             ThreeplGroup* group = m_groups.find_group(msg.sender(), payload.group);
             if (group) {
                 ceema::PayloadGroupMembers payloadMembers;
@@ -195,7 +195,7 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
             }
             break; }
         case ceema::MessageType::GROUP_TITLE: {
-            ceema::PayloadGroupTitle const& payload = msg.payload().get<ceema::PayloadGroupTitle>();
+            ceema::PayloadGroupTitle const& payload = msg.payload<ceema::PayloadGroupTitle>();
             ThreeplGroup* group = m_groups.find_group(msg.sender(), payload.group);
             if (group) {
                 group->set_name(payload.title);
@@ -204,7 +204,7 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
             break;
         }
         case ceema::MessageType::GROUP_MEMBERS: {
-            ceema::PayloadGroupMembers const& payload = msg.payload().get<ceema::PayloadGroupMembers>();
+            ceema::PayloadGroupMembers const& payload = msg.payload<ceema::PayloadGroupMembers>();
             ThreeplGroup* group = m_groups.find_group(msg.sender(), payload.group);
             if (group) {
                 group->set_members(payload.members);
@@ -213,7 +213,7 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
             break;
         }
         case ceema::MessageType::GROUP_LEAVE: {
-            ceema::PayloadGroupLeave const& payload = msg.payload().get<ceema::PayloadGroupLeave>();
+            ceema::PayloadGroupLeave const& payload = msg.payload<ceema::PayloadGroupLeave>();
             ThreeplGroup* group = m_groups.find_group(m_connection.account().id(), payload.group);
             if (group && group->remove_member(msg.sender())) {
                 ceema::PayloadGroupMembers payloadMembers;
@@ -224,7 +224,7 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
             }
             break; }
         case ceema::MessageType::GROUP_TEXT: {
-            ceema::PayloadGroupText const& payload = msg.payload().get<ceema::PayloadGroupText>();
+            ceema::PayloadGroupText const& payload = msg.payload<ceema::PayloadGroupText>();
             ThreeplGroup* group = find_or_create_group(payload.group, true);
             serv_got_chat_in(m_connection.connection(), group->id(), sender.c_str(), PURPLE_MESSAGE_RECV,
                              payload.m_text.c_str(), msg.time());

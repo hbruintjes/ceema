@@ -56,12 +56,21 @@ namespace ceema {
 
         byte_vector m_payloadData;
 
-        MessageType m_message_type;
         MessagePayload m_payload;
 
     public:
+        template<typename Payload>
         Message(client_id const& sender, client_id const& recipient,
-                MessagePayload const& payload);
+                Payload && payload) :
+                Packet(PacketType::MESSAGE_SEND), m_sender(sender),
+                m_recipient(recipient), m_id(gen_message_id()),
+                m_time(static_cast<timestamp>(
+                               std::chrono::duration_cast<std::chrono::seconds>(
+                                       std::chrono::system_clock::now().time_since_epoch()).count())),
+                m_flags(payload.default_flags()), m_nick(sender.toString()), m_nonce(crypto::generate_nonce()),
+                m_payload(std::forward<Payload>(payload))
+        {
+        }
 
         client_id const& sender() const {
             return m_sender;
@@ -97,11 +106,17 @@ namespace ceema {
         }
 
         MessageType payloadType() const {
-            return m_message_type;
+            return m_payload.get_type();
         }
 
-        MessagePayload const& payload() const {
-            return m_payload;
+        template<typename Payload>
+        auto& payload() {
+            return m_payload.get<Payload>();
+        }
+
+        template<typename Payload>
+        auto const& payload() const {
+            return m_payload.get<Payload>();
         }
 
         Acknowledgement generateAck() const {

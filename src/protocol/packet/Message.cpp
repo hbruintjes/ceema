@@ -26,19 +26,6 @@ namespace ceema {
                                              sizeof(timestamp) + sizeof(MessageFlags) + NICKNAME_SIZE + crypto_box_NONCEBYTES +
                                              crypto_box_MACBYTES;
 
-    Message::Message(client_id const& sender, client_id const& recipient,
-                     MessagePayload const& payload) :
-    Packet(PacketType::MESSAGE_SEND), m_sender(sender),
-    m_recipient(recipient), m_id(gen_message_id()),
-    m_time(static_cast<timestamp>(
-                   std::chrono::duration_cast<std::chrono::seconds>(
-                           std::chrono::system_clock::now().time_since_epoch()).count())),
-    m_flags(payload.default_flags()), m_nick(sender.toString()), m_nonce(crypto::generate_nonce()),
-    m_message_type(payload.get_type()),
-    m_payload(std::move(payload))
-    {
-    }
-
     Message::Message() : Packet(PacketType::MESSAGE_RECV), m_payload() {}
 
     Message Message::fromPacket(PacketType type, byte_vector const& packet) {
@@ -72,8 +59,6 @@ namespace ceema {
 
         std::copy(packet_iter, packet_iter+crypto_box_NONCEBYTES, m.m_nonce.begin());
         packet_iter += crypto_box_NONCEBYTES;
-
-        m.m_message_type = MessageType::NONE;
 
         std::size_t len = packet.size() - PAYLOAD_MSG_HEADER_SIZE + crypto_box_MACBYTES;
         m.m_payloadData.resize(len);
@@ -140,7 +125,7 @@ namespace ceema {
         }
 
         byte_vector type_data(sizeof(MessageType));
-        htole(m_message_type, type_data.data());
+        htole(m_payload.get_type(), type_data.data());
         byte_vector payload_data = m_payload.serialize();
         payload_data.insert(payload_data.begin(), type_data.begin(), type_data.end());
         LOG_TRACE(logging::loggerRoot, "Encrypting payload " << payload_data);
@@ -171,9 +156,8 @@ namespace ceema {
         LOG_TRACE(logging::loggerRoot, "Decrypted message data: " << m_payloadData);
 
         m_payload = MessagePayload::deserialize(m_payloadData);
-        m_message_type = m_payload.get_type();
 
-        LOG_TRACE(logging::loggerRoot, "Decoded message of type " << m_message_type);
+        LOG_TRACE(logging::loggerRoot, "Decoded message of type " << m_payload.get_type());
 
         m_payloadData.clear();
     }
