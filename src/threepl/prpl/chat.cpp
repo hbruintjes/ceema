@@ -156,8 +156,9 @@ int threepl_chat_send(PurpleConnection* gc, int id, const char* message, PurpleM
 
     ceema::PayloadGroupText payload;
     payload.group = group_data->uid();
-    payload.m_text = message;
-    std::basic_string<char> strmsg = message;
+    auto raw_message = purple_unescape_html(message);
+    payload.m_text = raw_message;
+    g_free(raw_message);
     auto msg_fut_vec = connection->send_group_message(group_data, payload);
     if (msg_fut_vec.empty()) {
         return -ENOTCONN;

@@ -9,7 +9,9 @@
 int threepl_send_im(PurpleConnection* gc, const char *who, const char *message, PurpleMessageFlags) {
     ThreeplConnection* connection = static_cast<ThreeplConnection*>(purple_connection_get_protocol_data(gc));
 
-    std::basic_string<char> text(message);
+    auto raw_message = purple_unescape_html(message);
+    std::string text(raw_message);
+    g_free(raw_message);
     ceema::PayloadText payload;
     payload.m_text = text;
 
