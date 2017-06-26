@@ -88,7 +88,7 @@ if (${GLIB2_FOUND})
         threepl/prpl/list.h threepl/prpl/list.cpp threepl/prpl/chat.h threepl/prpl/chat.cpp
             threepl/prpl/xfer.cpp threepl/prpl/xfer.h threepl/prpl/im.cpp threepl/prpl/im.h
             threepl/prpl/connection.h threepl/prpl/connection.cpp
-            )
+            threepl/Buddy.cpp threepl/Buddy.h)
     target_link_libraries(threepl ceema ${GLIB2_LIBRARIES})
     set_property(TARGET threepl PROPERTY CXX_STANDARD 14)
     target_compile_definitions(threepl PRIVATE PURPLE_DISABLE_DEPRECATED=1)
