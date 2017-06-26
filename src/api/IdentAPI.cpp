@@ -67,30 +67,30 @@ namespace ceema {
             return responseJson["success"];
         });
     }
-/*
-    std::vector<std::string> IdentAPI::checkFeatureLevel(std::vector<Contact> const& clients) {
+
+    future<std::vector<unsigned>> IdentAPI::checkFeatureLevel(std::vector<Contact> const& clients) {
         std::string url = "https://api.threema.ch/identity/check_featurelevel";
 
         // Request featureLevel adjustment
         json requestJson;
-        for (int i = 0; i < clients.size(); i++) {
-            requestJson["identities"][i] = clients[i].id().toString();
+        requestJson["identities"] = json::array();
+        for (Contact const& client: clients) {
+            requestJson["identities"].push_back(client.id().toString());
         }
 
-        json responseJson = jsonPost(url, requestJson);
+        return jsonPost(url, requestJson).next([](future<json> fut) mutable -> std::vector<unsigned> {
+            json responseJson = fut.get();
+            LOG_DEBUG(logging::loggerProtocol, "Result " << responseJson);
 
-        responseJson = jsonPost(url, requestJson);
-        LOG_DEBUG(logging::loggerProtocol, "Result " << responseJson);
-
-        auto levels = responseJson["featureLevels"];
-        std::vector<std::string> res;
-        for(int i = 0; i < levels.size(); i++) {
-            res.push_back(levels[i]);
-        }
-
-        return res;
+            std::vector<unsigned> res;
+            for(auto const& level: responseJson["featureLevels"]) {
+                res.push_back(level.get<unsigned>());
+            }
+            return res;
+        });
     }
 
+/*
     bool IdentAPI::identCheck(std::vector<Contact> const& clients) {
         std::string url = "https://api.threema.ch/identity/check";
 

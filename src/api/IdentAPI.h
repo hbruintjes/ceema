@@ -37,9 +37,9 @@ namespace ceema {
         future<Contact> getClientInfo(std::string client_id);
 
         future<bool> setFeatureLevel(Account const& client, int featureLevel);
-/*
-        std::vector<std::string> checkFeatureLevel(std::vector<Contact> const& clients);
 
+        future<std::vector<unsigned>> checkFeatureLevel(std::vector<Contact> const& clients);
+/*
         bool identCheck(std::vector<Contact> const& clients);
 
         bool checkRevocationKey(Account const& client);
