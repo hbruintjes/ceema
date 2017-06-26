@@ -193,8 +193,10 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
     }
 
     if (ack) {
+        bool mark_seen = purple_account_get_bool(m_connection.acct(), "status-seen", false) != 0;
+
         ceema::PayloadMessageStatus payloadStatus;
-        payloadStatus.m_status = ceema::MessageStatus::RECEIVED;
+        payloadStatus.m_status = mark_seen ? ceema::MessageStatus::SEEN : ceema::MessageStatus::RECEIVED;
         payloadStatus.m_ids.push_back(msg.id());
 
         sendPayload(m_connection.account(), msg.sender(), payloadStatus);

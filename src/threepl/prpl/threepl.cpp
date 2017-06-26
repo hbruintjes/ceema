@@ -234,6 +234,8 @@ static void threepl_init(PurplePlugin *plugin) {
     opts = g_list_append(opts, opt);
     opt = purple_account_option_bool_new("Use application gateway", "proxy", true);
     opts = g_list_append(opts, opt);
+    opt = purple_account_option_bool_new("Mark received messages as seen", "status-seen", false);
+    opts = g_list_append(opts, opt);
 
     threepl_protocol_info.protocol_options = opts;
 
