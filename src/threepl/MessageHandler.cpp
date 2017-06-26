@@ -115,76 +115,89 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
         // dialog when no conversation exists
         // Silently fail...
     }
+
+    bool ack;
     switch(msg.payloadType()) {
         case ceema::MessageType::MESSAGE_STATUS:
-            onMsgStatus(msg, msg.payload<ceema::PayloadMessageStatus>());
+            ack = onMsgStatus(msg, msg.payload<ceema::PayloadMessageStatus>());
             break;
         case ceema::MessageType::CLIENT_TYPING:
-            onMsgTyping(msg, msg.payload<ceema::PayloadTyping>());
+            ack = onMsgTyping(msg, msg.payload<ceema::PayloadTyping>());
             break;
         case ceema::MessageType::TEXT:
-            onMsgText(msg, msg.payload<ceema::PayloadText>());
+            ack = onMsgText(msg, msg.payload<ceema::PayloadText>());
             break;
         case ceema::MessageType::LOCATION:
-            onMsgLocation(msg, msg.payload<ceema::PayloadLocation>());
+            ack = onMsgLocation(msg, msg.payload<ceema::PayloadLocation>());
             break;
         case ceema::MessageType::ICON:
-            onMsgIcon(msg, msg.payload<ceema::PayloadIcon>());
+            ack = onMsgIcon(msg, msg.payload<ceema::PayloadIcon>());
             break;
         case ceema::MessageType::FILE:
-            onMsgFile(msg, msg.payload<ceema::PayloadFile>());
+            ack = onMsgFile(msg, msg.payload<ceema::PayloadFile>());
             break;
         case ceema::MessageType::PICTURE:
-            onMsgPicture(msg, msg.payload<ceema::PayloadPicture>());
+            ack = onMsgPicture(msg, msg.payload<ceema::PayloadPicture>());
             break;
         case ceema::MessageType::AUDIO:
-            onMsgAudio(msg, msg.payload<ceema::PayloadAudio>());
+            ack = onMsgAudio(msg, msg.payload<ceema::PayloadAudio>());
             break;
         case ceema::MessageType::VIDEO:
-            onMsgVideo(msg, msg.payload<ceema::PayloadVideo>());
+            ack = onMsgVideo(msg, msg.payload<ceema::PayloadVideo>());
             break;
         case ceema::MessageType::GROUP_SYNC: {
             ceema::PayloadGroupSync const& payload = msg.payload<ceema::PayloadGroupSync>();
             ThreeplGroup* group = m_groups.find_group(msg.sender(), payload.group);
             if (group) {
-                onMsgGroupSync(msg, group, payload);
+                ack = onMsgGroupSync(msg, group, payload);
             }
             break; }
         case ceema::MessageType::GROUP_TITLE: {
             ceema::PayloadGroupTitle const& payload = msg.payload<ceema::PayloadGroupTitle>();
             ThreeplGroup* group = m_groups.find_group(msg.sender(), payload.group);
             if (group) {
-                onMsgGroupTitle(msg, group, payload);
+                ack = onMsgGroupTitle(msg, group, payload);
             }
             break; }
         case ceema::MessageType::GROUP_MEMBERS: {
             ceema::PayloadGroupMembers const& payload = msg.payload<ceema::PayloadGroupMembers>();
             ThreeplGroup* group = m_groups.find_group(msg.sender(), payload.group);
             if (group) {
-                onMsgGroupMembers(msg, group, payload);
+                ack = onMsgGroupMembers(msg, group, payload);
             }
             break; }
         case ceema::MessageType::GROUP_LEAVE: {
             ceema::PayloadGroupLeave const& payload = msg.payload<ceema::PayloadGroupLeave>();
             ThreeplGroup* group = m_groups.find_group(m_connection.account().id(), payload.group);
             if (group) {
-                onMsgGroupLeave(msg, group, payload);
+                ack = onMsgGroupLeave(msg, group, payload);
             }
             break; }
         case ceema::MessageType::GROUP_TEXT: {
             ceema::PayloadGroupText const& payload = msg.payload<ceema::PayloadGroupText>();
             ThreeplGroup* group = find_or_create_group(payload.group, true);
             if (group) {
-                onMsgGroupText(msg, group, payload);
+                ack = onMsgGroupText(msg, group, payload);
             }
             break; }
-        default: {
+        default:
+            ack = false;
+            {
             std::string message = formatstr() << "Received message of type " << msg.payloadType() << " which is not supported";
             serv_got_im(m_connection.connection(), msg.sender().toString().c_str(),
                         message.c_str(),
                         static_cast<PurpleMessageFlags>(PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM|PURPLE_MESSAGE_ERROR),
                         msg.time());
-            break; }
+            }
+            break;
+    }
+
+    if (ack) {
+        ceema::PayloadMessageStatus payloadStatus;
+        payloadStatus.m_status = ceema::MessageStatus::RECEIVED;
+        payloadStatus.m_ids.push_back(msg.id());
+
+        sendPayload(m_connection.account(), msg.sender(), payloadStatus);
     }
 }
 
@@ -217,7 +230,7 @@ bool ThreeplMessageHandler::onMsgStatus(ceema::Message const& msg, ceema::Payloa
                 static_cast<PurpleMessageFlags>(PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_SYSTEM),
                 msg.time());
 
-    return true;
+    return false;
 }
 
 bool ThreeplMessageHandler::onMsgTyping(ceema::Message const& msg, ceema::PayloadTyping const& payload) {
@@ -226,7 +239,7 @@ bool ThreeplMessageHandler::onMsgTyping(ceema::Message const& msg, ceema::Payloa
     } else {
         serv_got_typing_stopped(m_connection.connection(), msg.sender().toString().c_str());
     }
-    return true;
+    return false;
 }
 
 bool ThreeplMessageHandler::onMsgText(ceema::Message const& msg, ceema::PayloadText const& payload) {
@@ -259,7 +272,7 @@ bool ThreeplMessageHandler::onMsgIcon(ceema::Message const& msg, ceema::PayloadI
             LOG_DBG("Icon error " << e.what());
         }
     });
-    return true;
+    return false;
 }
 
 bool ThreeplMessageHandler::onMsgFile(ceema::Message const& msg, ceema::PayloadFile const& payload) {
@@ -382,14 +395,14 @@ bool ThreeplMessageHandler::onMsgGroupTitle(ceema::Message const& msg, ThreeplGr
     group->set_name(payload.title);
     m_groups.update_chat(m_connection.acct(), *group);
 
-    return true;
+    return false;
 }
 
 bool ThreeplMessageHandler::onMsgGroupMembers(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupMembers const& payload) {
     group->set_members(payload.members);
     m_groups.update_chat(m_connection.acct(), *group);
 
-    return true;
+    return false;
 }
 
 bool ThreeplMessageHandler::onMsgGroupSync(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupSync const& payload) {
@@ -404,7 +417,7 @@ bool ThreeplMessageHandler::onMsgGroupSync(ceema::Message const& msg, ThreeplGro
     sendPayload(m_connection.account(), msg.sender(), payloadMembers);
     sendPayload(m_connection.account(), msg.sender(), payloadTitle);
 
-    return true;
+    return false;
 }
 
 bool ThreeplMessageHandler::onMsgGroupLeave(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupLeave const& payload) {
@@ -418,7 +431,7 @@ bool ThreeplMessageHandler::onMsgGroupLeave(ceema::Message const& msg, ThreeplGr
 
     sendPayload(m_connection.account(), group, payloadMembers);
 
-    return true;
+    return false;
 }
 
 bool ThreeplMessageHandler::onMsgGroupText(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupText const& payload) {
