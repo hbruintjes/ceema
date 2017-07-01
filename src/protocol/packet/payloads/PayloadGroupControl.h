@@ -76,12 +76,12 @@ namespace ceema {
     struct PayloadGroupLeave {
         static constexpr MessageType Type = MessageType::GROUP_LEAVE;
         static /*constexpr*/ MessageFlags default_flags() {
-            return MessageFlags{MessageFlag::NO_ACK, MessageFlag::NO_QUEUE, MessageFlag::GROUP};
+            return MessageFlags{MessageFlag::GROUP};
         }
 
-        static PayloadGroupLeave deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize() { return {}; }
+        group_uid group;
 
-        group_id group;
+        static PayloadGroupLeave deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
+        byte_vector serialize();
     };
 }

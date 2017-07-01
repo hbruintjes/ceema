@@ -147,7 +147,7 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
             break;
         case ceema::MessageType::GROUP_SYNC: {
             ceema::PayloadGroupSync const& payload = msg.payload<ceema::PayloadGroupSync>();
-            ThreeplGroup* group = m_groups.find_group(msg.sender(), payload.group);
+            ThreeplGroup* group = m_groups.find_group(msg.recipient(), payload.group);
             if (group) {
                 ack = onMsgGroupSync(msg, group, payload);
             }
