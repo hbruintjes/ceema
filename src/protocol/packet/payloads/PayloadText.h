@@ -49,7 +49,11 @@ namespace ceema {
         }
 
         //TODO: This is not an accurate representation
+        double m_lattitude;
+        double m_longitude;
+        double m_accuracy;
         std::string m_location;
+        std::string m_description;
 
         static PayloadLocation deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
         byte_vector serialize();

@@ -32,10 +32,65 @@ namespace ceema {
         if (size < 1) {
             throw std::runtime_error("Invalid location payload");
         }
-        return PayloadLocation{std::string(reinterpret_cast<const char*>(&*payload_data), size)};
+
+        PayloadLocation payload;
+
+        std::vector<std::string> lines;
+        std::string payloadString = std::string(reinterpret_cast<const char*>(&*payload_data), size);
+        std::string::size_type startpos = 0;
+        std::string::size_type endpos;
+        while(lines.size() < 2 && (endpos = payloadString.find('\n', startpos)) != std::string::npos) {
+            lines.emplace_back(payloadString.begin()+startpos, payloadString.begin()+endpos);
+            startpos = endpos+1;
+        }
+        if (startpos < payloadString.size()) {
+            lines.emplace_back(payloadString.begin()+startpos, payloadString.end());
+        }
+
+        std::stringstream ss(lines[0]);
+        ss >> payload.m_lattitude;
+        if (ss.peek() == ',') {
+            ss.ignore();
+        } else {
+            throw std::runtime_error("Invalid location payload");
+        }
+        ss >> payload.m_longitude;
+        if (ss.peek() == ',') {
+            ss.ignore();
+            ss >> payload.m_accuracy;
+        } else {
+            payload.m_accuracy = 0.0;
+        }
+
+        if (lines.size() > 1) {
+            payload.m_location = lines[1];
+            if (lines.size() > 2) {
+                payload.m_description = lines[2];
+                while((endpos = payload.m_description.find("\\n")) != std::string::npos) {
+                    payload.m_description.replace(endpos, 2, 1, '\n');
+                }
+            }
+        }
+
+        if (!ss) {
+            throw std::runtime_error("Invalid location payload");
+        }
+        return payload;
     }
 
     byte_vector PayloadLocation::serialize() {
-        return byte_vector(m_location.begin(), m_location.end());
+        std::stringstream ss;
+        ss << m_lattitude << ',' << m_longitude;
+        if (m_accuracy != 0.0) {
+            ss << ',' << m_accuracy;
+        }
+        if (!m_location.empty()) {
+            ss << '\n' << m_location;
+            if (!m_description.empty()) {
+                ss << '\n' << m_description;
+            }
+        }
+        std::string str = ss.str();
+        return byte_vector(str.begin(), str.end());
     }
 }

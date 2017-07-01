@@ -255,9 +255,21 @@ bool ThreeplMessageHandler::onMsgText(ceema::Message const& msg, ceema::PayloadT
 }
 
 bool ThreeplMessageHandler::onMsgLocation(ceema::Message const& msg, ceema::PayloadLocation const& payload) {
+    std::stringstream ss;
+    ss << "Location: <a href=\"http://www.openstreetmap.org/?lat=" << payload.m_lattitude << "&amp;lon=" << payload.m_longitude << "&amp;zoom=19\">";
+    if (!payload.m_location.empty()) {
+        ss << payload.m_location;
+    } else {
+        ss << payload.m_lattitude << "," << payload.m_longitude;
+    }
+    ss << "</a>";
+    if (!payload.m_description.empty()) {
+        ss << "<br>\n" << payload.m_description;
+    }
+    LOG_DBG(ss.str());
     serv_got_im(m_connection.connection(), msg.sender().toString().c_str(),
-                payload.m_location.c_str(),
-                PURPLE_MESSAGE_RECV, msg.time());
+                ss.str().c_str(),
+                PurpleMessageFlags(PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_NO_LINKIFY), msg.time());
     return true;
 }
 
