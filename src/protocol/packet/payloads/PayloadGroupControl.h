@@ -18,6 +18,7 @@
 
 #include <protocol/packet/messagetypes.h>
 #include <protocol/packet/MessageFlag.h>
+#include <protocol/data/Blob.h>
 #include <protocol/data/Group.h>
 #include <types/bytes.h>
 #include <string>
@@ -56,9 +57,13 @@ namespace ceema {
         }
 
         static PayloadGroupIcon deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize() { return {}; }
+        byte_vector serialize();
 
         group_id group;
+
+        blob_id id;
+        blob_size size;
+        shared_key key;
     };
 
     struct PayloadGroupSync {

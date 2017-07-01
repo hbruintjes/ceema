@@ -19,6 +19,7 @@
 #include <protocol/protocol.h>
 #include <logging/logging.h>
 #include <types/iter.h>
+#include <types/bytes.h>
 
 namespace ceema {
     PayloadGroupMembers PayloadGroupMembers::deserialize(byte_vector::const_iterator& payload_data, std::size_t size) {
@@ -67,6 +68,34 @@ namespace ceema {
         auto iter = res.begin();
         iter = std::copy(group.begin(), group.end(), iter);
         std::copy(title.begin(), title.end(), iter);
+
+        return res;
+    }
+
+    PayloadGroupIcon PayloadGroupIcon::deserialize(byte_vector::const_iterator& payload_data, std::size_t size) {
+        if (size != group_id::array_size) {
+            throw std::runtime_error("Invalid group sync payload");
+        }
+
+        PayloadGroupIcon payload;
+        copy_iter(payload_data, payload.group);
+
+        payload_data = copy_iter(payload_data, payload.id);
+        letoh(payload.size, &*payload_data);
+        payload_data += sizeof(payload.size);
+        payload_data = copy_iter(payload_data, payload.key);
+
+        return payload;
+    }
+
+    byte_vector PayloadGroupIcon::serialize() {
+        byte_vector res;
+        res.resize(group_id::array_size + blob_id::array_size + sizeof(blob_size) + shared_key::array_size);
+        auto iter = res.begin();
+        iter = std::copy(group.begin(), group.end(), iter);
+        iter = std::copy(id.begin(), id.end(), iter);
+        htole(size, &*iter);
+        std::copy(key.begin(), key.end(), iter);
 
         return res;
     }
