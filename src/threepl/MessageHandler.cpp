@@ -133,6 +133,9 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
         case ceema::MessageType::ICON:
             ack = onMsgIcon(msg, msg.payload<ceema::PayloadIcon>());
             break;
+        case ceema::MessageType::ICON_CLEAR:
+            //ack = onMsgIconClear(msg, msg.payload<ceema::PayloadIconClear>());
+            break;
         case ceema::MessageType::FILE:
             ack = onMsgFile(msg, msg.payload<ceema::PayloadFile>());
             break;
@@ -286,6 +289,11 @@ bool ThreeplMessageHandler::onMsgIcon(ceema::Message const& msg, ceema::PayloadI
             LOG_DBG("Icon error " << e.what());
         }
     });
+    return false;
+}
+
+bool ThreeplMessageHandler::onMsgIconClear(ceema::Message const& msg, ceema::PayloadIconClear const& payload) {
+    purple_buddy_icons_set_for_user(m_connection.acct(), msg.sender().toString().c_str(), NULL, 0, NULL);
     return false;
 }
 

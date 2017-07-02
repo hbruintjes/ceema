@@ -168,24 +168,26 @@ namespace ceema {
                 return os << "TEXT";
             case MessageType::LOCATION:
                 return os << "LOCATION";
-            case MessageType::ICON:
-                return os << "ICON";
             case MessageType::PICTURE:
                 return os << "PICTURE";
             case MessageType::VIDEO:
                 return os << "VIDEO";
             case MessageType::AUDIO:
                 return os << "AUDIO";
+            case MessageType::FILE:
+                return os << "FILE";
             case MessageType::POLL:
                 return os << "POLL";
             case MessageType::POLL_VOTE:
                 return os << "POLL_VOTE";
+            case MessageType::ICON:
+                return os << "ICON";
+            case MessageType::ICON_CLEAR:
+                return os << "ICON_CLEAR";
             case MessageType::MESSAGE_STATUS:
                 return os << "MESSAGE_STATUS";
             case MessageType::CLIENT_TYPING:
                 return os << "CLIENT_TYPING";
-            case MessageType::FILE:
-                return os << "FILE";
             case MessageType::GROUP_MEMBERS:
                 return os << "GROUP_MEMBERS";
             case MessageType::GROUP_TITLE:
