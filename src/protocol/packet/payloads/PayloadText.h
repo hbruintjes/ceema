@@ -48,7 +48,6 @@ namespace ceema {
             return MessageFlags{MessageFlag::PUSH};
         }
 
-        //TODO: This is not an accurate representation
         double m_lattitude;
         double m_longitude;
         double m_accuracy;

@@ -36,6 +36,7 @@ namespace ceema {
         static constexpr MessageFlags default_flags() {
             return MessageFlags();
         }
+        static PayloadNone deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
         byte_vector serialize() const;
     };
 

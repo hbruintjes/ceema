@@ -211,7 +211,7 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
             ceema::PayloadGroupIcon const& payload = msg.payload<ceema::PayloadGroupIcon>();
             ThreeplGroup* group = m_groups.find_group(msg.recipient(), payload.group);
             if (group) {
-                //ack = onMsgGroupIcon(msg, group, payload);
+                ack = onMsgGroupIcon(msg, group, payload);
             }
             break; }
         case ceema::MessageType::GROUP_SYNC: {
@@ -482,6 +482,11 @@ bool ThreeplMessageHandler::onMsgGroupMembers(ceema::Message const& msg, Threepl
     return false;
 }
 
+bool ThreeplMessageHandler::onMsgGroupIcon(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupIcon const& payload) {
+
+    return false;
+}
+
 bool ThreeplMessageHandler::onMsgGroupSync(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupSync const& payload) {
     ceema::PayloadGroupMembers payloadMembers;
     payloadMembers.group = group->gid();
@@ -529,4 +534,8 @@ bool ThreeplMessageHandler::onMsgGroupPicture(ceema::Message const& msg, Threepl
     purple_xfer_request(transfer->xfer());
 
     return true;
+}
+
+bool ThreeplMessageHandler::isOwner(ceema::group_uid const& id) const {
+    return id.cid() == m_connection.account().id();
 }

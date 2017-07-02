@@ -19,16 +19,25 @@ void send_avatar(ThreeplConnection* connection, ceema::client_id who) {
         return;
     }
 
+    // Timestamp stored as string so no overflows etc.
+    const char* str_timestamp = purple_blist_node_get_string(&buddy->node, "icon-ts");
+    time_t timestamp = str_timestamp ? std::strtoul(str_timestamp, nullptr, 10) : 0;
+
     auto img = purple_buddy_icons_find_account_icon(account);
     if (!img) {
+        if (timestamp != 0) {
+            // Clear the icon
+            ceema::PayloadIconClear payload;
+            connection->send_message(who, payload);
+            purple_blist_node_set_string(&buddy->node, "icon-ts", "0");
+        }
         return;
     }
     std::uint8_t const *avatar_data = static_cast<std::uint8_t const*>(purple_imgstore_get_data(img));
     auto avatar_len = purple_imgstore_get_size(img);
     time_t icon_ts = purple_buddy_icons_get_account_icon_timestamp(account);
 
-    const char* str_timestamp = purple_blist_node_get_string(&buddy->node, "icon-ts");
-    time_t timestamp = str_timestamp ? std::strtoul(str_timestamp, nullptr, 10) : 0;
+
 
     if (timestamp < icon_ts) {
         // Send updated icon

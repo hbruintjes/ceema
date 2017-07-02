@@ -80,7 +80,6 @@ private:
     void recv(ceema::Message& msg);
     void send(ceema::Message& msg);
 
-
     bool onMsgText(ceema::Message const& msg, ceema::PayloadText const& payload);
     bool onMsgPicture(ceema::Message const& msg, ceema::PayloadPicture const& payload);
     bool onMsgLocation(ceema::Message const& msg, ceema::PayloadLocation const& payload);
@@ -99,8 +98,11 @@ private:
     bool onMsgGroupTitle(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupTitle const& payload);
     bool onMsgGroupLeave(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupLeave const& payload);
 
+    bool onMsgGroupIcon(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupIcon const& payload);
     bool onMsgGroupSync(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupSync const& payload);
 
     bool onMsgStatus(ceema::Message const& msg, ceema::PayloadMessageStatus const& payload);
     bool onMsgTyping(ceema::Message const& msg, ceema::PayloadTyping const& payload);
+
+    bool isOwner(ceema::group_uid const& id) const;
 };
