@@ -73,6 +73,7 @@ target_link_libraries(ceema
     ${CURL_LIBRARIES}
     ${OPENSSL_LIBRARIES}
     ${sodium_LIBRARIES}
+    mpark_variant
     )
 
 if (${GLIB2_FOUND})

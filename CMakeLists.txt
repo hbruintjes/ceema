@@ -78,6 +78,7 @@ find_package(CURL QUIET REQUIRED)
 find_package(OpenSSL QUIET REQUIRED)
 find_package(sodium QUIET REQUIRED)
 #find_package(JsonCpp QUIET REQUIRED)
+add_subdirectory(3rdparty/variant)
 
 #set(Botan_SUFFIX "2" CACHE STRING "Botan path version suffix")
 #find_package(Botan QUIET REQUIRED)
