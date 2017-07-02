@@ -221,4 +221,18 @@ namespace ceema {
 
         return res;
     }
+
+    PayloadIconClear PayloadIconClear::deserialize(byte_vector::const_iterator& payload_data, std::size_t size) {
+        if (size != 0) {
+            throw std::runtime_error("Invalid icon clear payload");
+        }
+
+        PayloadIconClear payload;
+        return payload;
+    }
+
+    byte_vector PayloadIconClear::serialize() {
+        byte_vector res;
+        return res;
+    }
 }

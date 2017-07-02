@@ -85,6 +85,7 @@ private:
     bool onMsgText(ceema::Message const& msg, ceema::PayloadText const& payload);
     bool onMsgLocation(ceema::Message const& msg, ceema::PayloadLocation const& payload);
     bool onMsgIcon(ceema::Message const& msg, ceema::PayloadIcon const& payload);
+    bool onMsgIconClear(ceema::Message const& msg, ceema::PayloadIcon const& payload);
     bool onMsgFile(ceema::Message const& msg, ceema::PayloadFile const& payload);
     bool onMsgPicture(ceema::Message const& msg, ceema::PayloadPicture const& payload);
     bool onMsgAudio(ceema::Message const& msg, ceema::PayloadAudio const& payload);

@@ -162,4 +162,17 @@ namespace ceema {
         static PayloadIcon deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
         byte_vector serialize();
     };
+
+    /**
+     * Request to clear the icon of a user
+     */
+    struct PayloadIconClear {
+        static constexpr MessageType Type = MessageType::ICON_CLEAR;
+        static /*constexpr*/ MessageFlags default_flags() {
+            return MessageFlags{};
+        }
+
+        static PayloadIconClear deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
+        byte_vector serialize();
+    };
 }

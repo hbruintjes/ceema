@@ -168,7 +168,7 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
             break; }
         case ceema::MessageType::GROUP_LEAVE: {
             ceema::PayloadGroupLeave const& payload = msg.payload<ceema::PayloadGroupLeave>();
-            ThreeplGroup* group = m_groups.find_group(m_connection.account().id(), payload.group);
+            ThreeplGroup* group = m_groups.find_group(payload.group);
             if (group) {
                 ack = onMsgGroupLeave(msg, group, payload);
             }
