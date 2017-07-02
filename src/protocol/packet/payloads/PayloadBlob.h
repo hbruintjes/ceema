@@ -42,7 +42,7 @@ namespace ceema {
         nonce n;
 
         static PayloadPicture deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize();
+        byte_vector serialize() const;
     };
 
 
@@ -71,7 +71,7 @@ namespace ceema {
         shared_key key;
 
         static PayloadVideo deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize();
+        byte_vector serialize() const;
     };
 
     /**
@@ -93,7 +93,7 @@ namespace ceema {
         shared_key key;
 
         static PayloadAudio deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize();
+        byte_vector serialize() const;
     };
 
     /**
@@ -139,7 +139,7 @@ namespace ceema {
         FileFlag flag;
 
         static PayloadFile deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize();
+        byte_vector serialize() const;
     };
 
     /**
@@ -160,7 +160,7 @@ namespace ceema {
         shared_key key;
 
         static PayloadIcon deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize();
+        byte_vector serialize() const;
     };
 
     /**
@@ -173,6 +173,6 @@ namespace ceema {
         }
 
         static PayloadIconClear deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize();
+        byte_vector serialize() const;
     };
 }

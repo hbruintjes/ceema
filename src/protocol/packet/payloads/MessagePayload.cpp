@@ -67,28 +67,28 @@ namespace ceema {
                 return MessagePayload(PayloadGroupText::deserialize(payload_data, size));
             case MessageType::GROUP_LOCATION:
                 return MessagePayload(PayloadGroupLocation::deserialize(payload_data, size));
-//            case MessageType::GROUP_PICTURE:
-//                return MessagePayload(PayloadGroupPicture::deserialize(payload_data, size));
-//            case MessageType::GROUP_VIDEO:
-//                return MessagePayload(PayloadGroupVideo::deserialize(payload_data, size));
-//            case MessageType::GROUP_AUDIO:
-//                return MessagePayload(PayloadGroupAudio::deserialize(payload_data, size));
+            case MessageType::GROUP_PICTURE:
+                return MessagePayload(PayloadGroupPicture::deserialize(payload_data, size));
+            case MessageType::GROUP_VIDEO:
+                return MessagePayload(PayloadGroupVideo::deserialize(payload_data, size));
+            case MessageType::GROUP_AUDIO:
+                return MessagePayload(PayloadGroupAudio::deserialize(payload_data, size));
             case MessageType::GROUP_FILE:
                 return MessagePayload(PayloadGroupFile::deserialize(payload_data, size));
-//            case MessageType::GROUP_POLL:
-//                return MessagePayload(PayloadGroupPoll::deserialize(payload_data, size));
-//            case MessageType::GROUP_POLL_VOTE:
-//                return MessagePayload(PayloadGroupPollVote::deserialize(payload_data, size));
-//            case MessageType::GROUP_ICON:
-//                return MessagePayload(PayloadGroupIcon::deserialize(payload_data, size));
-//            case MessageType::GROUP_LEAVE:
-//                return MessagePayload(PayloadGroupLeave::deserialize(payload_data, size));
+            case MessageType::GROUP_POLL:
+                return MessagePayload(PayloadGroupPoll::deserialize(payload_data, size));
+            case MessageType::GROUP_POLL_VOTE:
+                return MessagePayload(PayloadGroupPollVote::deserialize(payload_data, size));
+            case MessageType::GROUP_ICON:
+                return MessagePayload(PayloadGroupIcon::deserialize(payload_data, size));
+            case MessageType::GROUP_LEAVE:
+                return MessagePayload(PayloadGroupLeave::deserialize(payload_data, size));
             default:
                 throw std::runtime_error(formatstr() << "Invalid type for MessagePayload 0x" << std::hex << static_cast<unsigned>(type));
         }
     }
 
-    byte_vector PayloadNone::serialize() {
+    byte_vector PayloadNone::serialize() const {
         throw std::logic_error("Cannot serialize NONE message");
     }
 

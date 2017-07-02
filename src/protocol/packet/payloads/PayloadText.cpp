@@ -24,7 +24,7 @@ namespace ceema {
         return PayloadText{std::string(reinterpret_cast<const char*>(&*payload_data), size)};
     }
 
-    byte_vector PayloadText::serialize() {
+    byte_vector PayloadText::serialize() const {
         return byte_vector(m_text.begin(), m_text.end());
     }
 
@@ -78,7 +78,7 @@ namespace ceema {
         return payload;
     }
 
-    byte_vector PayloadLocation::serialize() {
+    byte_vector PayloadLocation::serialize() const {
         std::stringstream ss;
         ss << m_lattitude << ',' << m_longitude;
         if (m_accuracy != 0.0) {

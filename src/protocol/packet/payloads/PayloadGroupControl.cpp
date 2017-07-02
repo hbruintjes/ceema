@@ -37,7 +37,7 @@ namespace ceema {
         return payload;
     }
 
-    byte_vector PayloadGroupMembers::serialize() {
+    byte_vector PayloadGroupMembers::serialize() const {
         byte_vector res;
         res.resize(group_id::array_size + members.size()*client_id::array_size);
         auto iter = res.begin();
@@ -62,7 +62,7 @@ namespace ceema {
         return payload;
     }
 
-    byte_vector PayloadGroupTitle::serialize() {
+    byte_vector PayloadGroupTitle::serialize() const {
         byte_vector res;
         res.resize(group_id::array_size + title.size());
         auto iter = res.begin();
@@ -88,7 +88,7 @@ namespace ceema {
         return payload;
     }
 
-    byte_vector PayloadGroupIcon::serialize() {
+    byte_vector PayloadGroupIcon::serialize() const {
         byte_vector res;
         res.resize(group_id::array_size + blob_id::array_size + sizeof(blob_size) + shared_key::array_size);
         auto iter = res.begin();
@@ -111,7 +111,7 @@ namespace ceema {
         return payload;
     }
 
-    byte_vector PayloadGroupSync::serialize() {
+    byte_vector PayloadGroupSync::serialize() const {
         byte_vector res;
         res.resize(group_id::array_size);
         auto iter = res.begin();
@@ -131,7 +131,7 @@ namespace ceema {
         return payload;
     }
 
-    byte_vector PayloadGroupLeave::serialize() {
+    byte_vector PayloadGroupLeave::serialize() const {
         return byte_vector(group.begin(), group.end());
     }
 

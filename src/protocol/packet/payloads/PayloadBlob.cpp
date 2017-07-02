@@ -39,7 +39,7 @@ namespace ceema {
         return payload;
     }
 
-    byte_vector PayloadPicture::serialize() {
+    byte_vector PayloadPicture::serialize() const {
         byte_vector res;
         res.resize(PayloadPictureSize);
 
@@ -77,7 +77,7 @@ namespace ceema {
         return payload;
     }
 
-    byte_vector PayloadVideo::serialize() {
+    byte_vector PayloadVideo::serialize() const {
         byte_vector res;
         res.resize(PayloadVideoSize);
 
@@ -116,7 +116,7 @@ namespace ceema {
         return payload;
     }
 
-    byte_vector PayloadAudio::serialize() {
+    byte_vector PayloadAudio::serialize() const {
         byte_vector res;
         res.resize(PayloadAudioSize);
 
@@ -185,7 +185,7 @@ namespace ceema {
         return val.get<PayloadFile>();
     }
 
-    byte_vector PayloadFile::serialize() {
+    byte_vector PayloadFile::serialize() const {
         byte_vector res;
         json file = json(*this);
         std::string jsonString = file.dump();
@@ -209,7 +209,7 @@ namespace ceema {
         return payload;
     }
 
-    byte_vector PayloadIcon::serialize() {
+    byte_vector PayloadIcon::serialize() const {
         byte_vector res;
         res.resize(PayloadIconSize);
 
@@ -231,7 +231,7 @@ namespace ceema {
         return payload;
     }
 
-    byte_vector PayloadIconClear::serialize() {
+    byte_vector PayloadIconClear::serialize() const {
         byte_vector res;
         return res;
     }

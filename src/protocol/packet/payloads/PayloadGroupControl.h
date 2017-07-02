@@ -31,7 +31,7 @@ namespace ceema {
         }
 
         static PayloadGroupMembers deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize();
+        byte_vector serialize() const;
 
         group_id group;
         std::vector<client_id> members;
@@ -44,7 +44,7 @@ namespace ceema {
         }
 
         static PayloadGroupTitle deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize();
+        byte_vector serialize() const;
 
         group_id group;
         std::string title;
@@ -57,7 +57,7 @@ namespace ceema {
         }
 
         static PayloadGroupIcon deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize();
+        byte_vector serialize() const;
 
         group_id group;
 
@@ -73,7 +73,7 @@ namespace ceema {
         }
 
         static PayloadGroupSync deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize();
+        byte_vector serialize() const;
 
         group_id group;
     };
@@ -87,6 +87,6 @@ namespace ceema {
         group_uid group;
 
         static PayloadGroupLeave deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize();
+        byte_vector serialize() const;
     };
 }

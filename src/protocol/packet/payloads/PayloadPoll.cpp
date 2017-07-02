@@ -35,7 +35,7 @@ namespace ceema {
 
     }
 
-    byte_vector PayloadPoll::serialize() {
+    byte_vector PayloadPoll::serialize() const {
         byte_vector res;
         res.insert(res.begin(), id.begin(), id.end());
         json poll = json(this->poll);
@@ -61,7 +61,7 @@ namespace ceema {
         return payload;
     }
 
-    byte_vector PayloadPollVote::serialize() {
+    byte_vector PayloadPollVote::serialize() const {
         byte_vector res;
         res.insert(res.begin(), id.begin(), id.end());
         json choices = json(this->choices);

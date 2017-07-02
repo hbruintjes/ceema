@@ -25,9 +25,7 @@
 #include <protocol/packet/payloads/PayloadGroupControl.h>
 #include <protocol/packet/MessageFlag.h>
 
-//#define BOOST_MPL_LIMIT_LIST_SIZE 30
-//#define BOOST_VARIANT_VISITATION_UNROLLING_LIMIT 30
-#include "boost/variant.hpp"
+#include <mpark/variant.hpp>
 
 using json = nlohmann::json;
 
@@ -38,9 +36,9 @@ namespace ceema {
         static constexpr MessageFlags default_flags() {
             return MessageFlags();
         }
-        byte_vector serialize();
+        byte_vector serialize() const;
     };
-
+/*
     class PayloadSerializer : public boost::static_visitor<byte_vector>
     {
     public:
@@ -70,13 +68,14 @@ namespace ceema {
             return Payload::default_flags();
         }
     };
+*/
 
     /**
      * Class representing a union of all possible Payload types,
      * with corresponding (templated) getters.
      */
     struct MessagePayload {
-        boost::variant<
+        mpark::variant<
                 PayloadNone,
 
                 PayloadText,
@@ -85,9 +84,12 @@ namespace ceema {
                 PayloadVideo,
                 PayloadAudio,
                 PayloadFile,
-                PayloadIcon,
                 PayloadPoll,
                 PayloadPollVote,
+
+                PayloadIcon,
+                PayloadIconClear,
+
                 PayloadMessageStatus,
                 PayloadTyping,
 
@@ -99,12 +101,12 @@ namespace ceema {
 
                 PayloadGroupText,
                 PayloadGroupLocation,
-                //PayloadGroupPicture,
-                //PayloadGroupVideo,
-                //PayloadGroupAudio,
-                PayloadGroupFile
-                //PayloadGroupPoll,
-                //PayloadGroupPollVote
+                PayloadGroupPicture,
+                PayloadGroupVideo,
+                PayloadGroupAudio,
+                PayloadGroupFile,
+                PayloadGroupPoll,
+                PayloadGroupPollVote
         > m_payload;
 
         MessagePayload() : m_payload(PayloadNone{}) {}
@@ -114,25 +116,30 @@ namespace ceema {
 
         template<typename Payload>
         auto& get() {
-            return boost::get<Payload>(m_payload);
+            //return boost::get<Payload>(m_payload);
+            return mpark::get<Payload>(m_payload);
         }
         template<typename Payload>
         auto const& get() const {
-            return boost::get<Payload>(m_payload);
+            //return boost::get<Payload>(m_payload);
+            return mpark::get<Payload>(m_payload);
         }
 
         MessageType get_type() const {
-            return boost::apply_visitor( PayloadType(), m_payload );
+            //return boost::apply_visitor( PayloadType(), m_payload );
+            return mpark::visit([](const auto& x) -> MessageType { return std::decay<decltype(x)>::type::Type; }, m_payload);
         }
 
         MessageFlags default_flags() const {
-            return boost::apply_visitor( PayloadFlags(), m_payload );
+            //return boost::apply_visitor( PayloadFlags(), m_payload );
+            return mpark::visit([](const auto& x) -> MessageFlags { return std::decay<decltype(x)>::type::default_flags(); }, m_payload);
         }
 
         static MessagePayload deserialize(byte_vector const& payload_data);
 
         byte_vector serialize() {
-            return boost::apply_visitor( PayloadSerializer(), m_payload );
+            //return boost::apply_visitor( PayloadSerializer(), m_payload );
+            return mpark::visit([](const auto& x) -> byte_vector { return x.serialize(); }, m_payload);
         }
 
     };

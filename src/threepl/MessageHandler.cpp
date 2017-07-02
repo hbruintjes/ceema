@@ -134,7 +134,7 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
             ack = onMsgIcon(msg, msg.payload<ceema::PayloadIcon>());
             break;
         case ceema::MessageType::ICON_CLEAR:
-            //ack = onMsgIconClear(msg, msg.payload<ceema::PayloadIconClear>());
+            ack = onMsgIconClear(msg, msg.payload<ceema::PayloadIconClear>());
             break;
         case ceema::MessageType::FILE:
             ack = onMsgFile(msg, msg.payload<ceema::PayloadFile>());

@@ -38,7 +38,7 @@ namespace ceema {
         return payload;
     }
 
-    byte_vector PayloadMessageStatus::serialize() {
+    byte_vector PayloadMessageStatus::serialize() const {
         byte_vector res;
         res.resize(1 + m_ids.size()*message_id::array_size);
 
@@ -58,7 +58,7 @@ namespace ceema {
         return PayloadTyping{!!payload_data[0]};
     }
 
-    byte_vector PayloadTyping::serialize() {
+    byte_vector PayloadTyping::serialize() const {
         return byte_vector{m_typing ? std::uint8_t(1u) : std::uint8_t(0u)};
     }
 

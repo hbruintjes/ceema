@@ -47,7 +47,7 @@ namespace ceema {
             return payload;
         }
 
-        byte_vector serialize() {
+        byte_vector serialize() const {
             byte_vector data = Payload::serialize();
             data.insert(data.begin(), group.begin(), group.end());
             return data;
@@ -76,7 +76,7 @@ namespace ceema {
         shared_key key;
 
         static PayloadGroupPicture deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize();
+        byte_vector serialize() const;
     };
 
     struct PayloadGroupVideo : public PayloadGroupBase<PayloadVideo>  {

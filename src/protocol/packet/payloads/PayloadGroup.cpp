@@ -35,7 +35,7 @@ namespace ceema {
         return payload;
     }
 
-    byte_vector PayloadGroupPicture::serialize() {
+    byte_vector PayloadGroupPicture::serialize() const {
         byte_vector data;
         data.resize(group_uid::array_size + blob_id::array_size + sizeof(blob_size) + shared_key::array_size);
 

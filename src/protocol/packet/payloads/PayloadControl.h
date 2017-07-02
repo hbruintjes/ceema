@@ -46,7 +46,7 @@ namespace ceema {
         std::vector<message_id> m_ids;
 
         static PayloadMessageStatus deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize();
+        byte_vector serialize() const;
     };
 
     /**
@@ -60,6 +60,6 @@ namespace ceema {
         bool m_typing;
 
         static PayloadTyping deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize();
+        byte_vector serialize() const;
     };
 }
