@@ -68,7 +68,7 @@ public:
         return res;
     }
 
-    ThreeplGroup* find_or_create_group(ceema::group_uid uid, bool add_chat = false);
+    ThreeplGroup* find_or_create_group(ceema::group_uid uid, ceema::Message const &msg, bool add_chat = false);
 
     ceema::message_id const& lastAgreeable() const {
         return m_lastAgreeable;
@@ -91,7 +91,8 @@ private:
     bool onMsgIconClear(ceema::Message const& msg, ceema::PayloadIconClear const& payload);
 
     bool onMsgGroupText(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupText const& payload);
-    bool onMsgGroupPicture(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupPicture const& payload);
+    bool onMsgGroupLocation(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupLocation const& payload);
+    bool onMsgGroupPicture(ceema::Message const& msg, ceema::PayloadGroupPicture const& payload);
     // Audio, Video, File all handled as with Contact messages
 
     bool onMsgGroupMembers(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupMembers const& payload);
@@ -105,4 +106,5 @@ private:
     bool onMsgTyping(ceema::Message const& msg, ceema::PayloadTyping const& payload);
 
     bool isOwner(ceema::group_uid const& id) const;
+    void requestSync(ceema::Message const& msg, ceema::group_uid const& id);
 };

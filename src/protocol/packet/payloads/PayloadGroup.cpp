@@ -48,4 +48,19 @@ namespace ceema {
 
         return data;
     }
+
+    PayloadGroupLeave PayloadGroupLeave::deserialize(byte_vector::const_iterator& payload_data, std::size_t size) {
+        if (size < group_uid::array_size) {
+            throw std::runtime_error("Invalid group leave payload");
+        }
+
+        PayloadGroupLeave payload;
+        payload_data = copy_iter(payload_data, payload.group);
+
+        return payload;
+    }
+
+    byte_vector PayloadGroupLeave::serialize() const {
+        return byte_vector(group.begin(), group.end());
+    }
 }

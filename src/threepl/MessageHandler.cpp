@@ -11,6 +11,18 @@
 #include "ContactStore.h"
 #include "Transfer.h"
 
+ceema::group_uid getGroupUID(ceema::Message const &msg, ceema::PayloadGroupMessage const &payload) {
+    return payload.group;
+}
+
+ceema::group_uid getGroupUID(ceema::Message const &msg, ceema::PayloadGroupInfo const &payload) {
+    return ceema::make_group_uid(msg.sender(), payload.group);
+}
+
+ceema::group_uid getGroupUID(ceema::Message const &msg, ceema::PayloadGroupSync const &payload) {
+    return ceema::make_group_uid(msg.recipient(), payload.group);
+}
+
 void ThreeplMessageHandler::onRecvMessage(std::unique_ptr<ceema::Message> msg) {
     if (m_contacts.has_contact(msg->sender())) {
         recv(*msg);
@@ -34,12 +46,15 @@ ceema::future<std::unique_ptr<ceema::Message>> ThreeplMessageHandler::sendMessag
     }
 }
 
-ThreeplGroup* ThreeplMessageHandler::find_or_create_group(ceema::group_uid uid, bool add_chat) {
+ThreeplGroup* ThreeplMessageHandler::find_or_create_group(ceema::group_uid uid, ceema::Message const &msg, bool add_chat) {
     ThreeplGroup* group = m_groups.find_group(uid, false);
     if (!group) {
+        if (isOwner(uid)) {
+            // No info available
+            return nullptr;
+        }
         group = m_groups.add_group(uid);
-        // Request sync
-        sendPayload(m_connection.account(), group->owner(), ceema::PayloadGroupSync{});
+
         if (add_chat) {
             serv_got_joined_chat(m_connection.connection(), group->id(), group->name().c_str());
             m_groups.update_chat(m_connection.acct(), *group);
@@ -150,75 +165,110 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
 
         case ceema::MessageType::GROUP_TEXT: {
             ceema::PayloadGroupText const& payload = msg.payload<ceema::PayloadGroupText>();
-            ThreeplGroup* group = find_or_create_group(payload.group, true);
+            ThreeplGroup* group = find_or_create_group(payload.group, msg, true);
             if (group) {
                 ack = onMsgGroupText(msg, group, payload);
+            } else {
+                // If no group, display text directly
+                ack = onMsgText(msg, payload);
+                requestSync(msg, getGroupUID(msg, payload));
+            }
+            break; }
+        case ceema::MessageType::GROUP_LOCATION: {
+            ceema::PayloadGroupLocation const& payload = msg.payload<ceema::PayloadGroupLocation>();
+            ThreeplGroup* group = find_or_create_group(payload.group, msg, true);
+            if (group) {
+                ack = onMsgGroupLocation(msg, group, payload);
+            } else {
+                // If no group, display text directly
+                ack = onMsgLocation(msg, payload);
+                requestSync(msg, getGroupUID(msg, payload));
             }
             break; }
 
         case ceema::MessageType::GROUP_PICTURE: {
             ceema::PayloadGroupPicture const& payload = msg.payload<ceema::PayloadGroupPicture>();
-            ThreeplGroup* group = find_or_create_group(payload.group, true);
-            if (group) {
-                ack = onMsgGroupPicture(msg, group, payload);
+            ThreeplGroup* group = find_or_create_group(payload.group, msg, true);
+            ack = onMsgGroupPicture(msg, payload);
+            if (!group) {
+                requestSync(msg, getGroupUID(msg, payload));
             }
             break; }
         case ceema::MessageType::GROUP_VIDEO: {
             ceema::PayloadGroupVideo const& payload = msg.payload<ceema::PayloadGroupVideo>();
-            ThreeplGroup* group = find_or_create_group(payload.group, true);
-            if (group) {
-                ack = onMsgVideo(msg, payload, false);
+            ThreeplGroup* group = find_or_create_group(payload.group, msg, true);
+            ack = onMsgVideo(msg, payload, false);
+            if (!group) {
+                requestSync(msg, getGroupUID(msg, payload));
             }
             break; }
         case ceema::MessageType::GROUP_AUDIO: {
             ceema::PayloadGroupAudio const& payload = msg.payload<ceema::PayloadGroupAudio>();
-            ThreeplGroup* group = find_or_create_group(payload.group, true);
-            if (group) {
-                ack = onMsgAudio(msg, payload, false);
+            ThreeplGroup* group = find_or_create_group(payload.group, msg, true);
+            ack = onMsgAudio(msg, payload, false);
+            if (!group) {
+                requestSync(msg, getGroupUID(msg, payload));
             }
             break; }
         case ceema::MessageType::GROUP_FILE: {
             ceema::PayloadGroupFile const& payload = msg.payload<ceema::PayloadGroupFile>();
-            ThreeplGroup* group = find_or_create_group(payload.group, true);
-            if (group) {
-                ack = onMsgFile(msg, payload, false);
+            ThreeplGroup* group = find_or_create_group(payload.group, msg, true);
+            ack = onMsgFile(msg, payload, false);
+            if (!group) {
+                requestSync(msg, getGroupUID(msg, payload));
             }
             break; }
 
         case ceema::MessageType::GROUP_MEMBERS: {
             ceema::PayloadGroupMembers const& payload = msg.payload<ceema::PayloadGroupMembers>();
-            ThreeplGroup* group = m_groups.find_group(msg.sender(), payload.group);
+            //TODO: Create chat?
+            ThreeplGroup* group = find_or_create_group(getGroupUID(msg, payload), msg, true);
             if (group) {
                 ack = onMsgGroupMembers(msg, group, payload);
+            } else {
+                // No need to request sync: Members is the first message to
+                // arrive after doing so
+                assert(false);
             }
             break; }
         case ceema::MessageType::GROUP_TITLE: {
             ceema::PayloadGroupTitle const& payload = msg.payload<ceema::PayloadGroupTitle>();
-            ThreeplGroup* group = m_groups.find_group(msg.sender(), payload.group);
+            ThreeplGroup* group = m_groups.find_group(getGroupUID(msg, payload));
             if (group) {
                 ack = onMsgGroupTitle(msg, group, payload);
+            } else {
+                // Group info lost? (re)request sync, ignore the title
+                requestSync(msg, getGroupUID(msg, payload));
             }
             break; }
         case ceema::MessageType::GROUP_LEAVE: {
             ceema::PayloadGroupLeave const& payload = msg.payload<ceema::PayloadGroupLeave>();
-            ThreeplGroup* group = m_groups.find_group(payload.group);
+            ThreeplGroup* group = m_groups.find_group(getGroupUID(msg, payload));
             if (group) {
                 ack = onMsgGroupLeave(msg, group, payload);
+            } else {
+                // can ignore the request, any following message will trigger a sync
             }
             break; }
 
         case ceema::MessageType::GROUP_ICON: {
             ceema::PayloadGroupIcon const& payload = msg.payload<ceema::PayloadGroupIcon>();
-            ThreeplGroup* group = m_groups.find_group(msg.recipient(), payload.group);
+            ThreeplGroup* group = m_groups.find_group(getGroupUID(msg, payload));
             if (group) {
                 ack = onMsgGroupIcon(msg, group, payload);
+            } else {
+                // Group info lost? (re)request sync, ignore the icon
+                requestSync(msg, getGroupUID(msg, payload));
             }
             break; }
         case ceema::MessageType::GROUP_SYNC: {
             ceema::PayloadGroupSync const& payload = msg.payload<ceema::PayloadGroupSync>();
-            ThreeplGroup* group = m_groups.find_group(msg.recipient(), payload.group);
+            ThreeplGroup* group = find_or_create_group(getGroupUID(msg, payload), msg, false);
             if (group) {
                 ack = onMsgGroupSync(msg, group, payload);
+            } else {
+                // Lost info on our own group, remove sender from group
+                requestSync(msg, getGroupUID(msg, payload));
             }
             break; }
 
@@ -524,7 +574,25 @@ bool ThreeplMessageHandler::onMsgGroupText(ceema::Message const& msg, ThreeplGro
     return true;
 }
 
-bool ThreeplMessageHandler::onMsgGroupPicture(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupPicture const& payload) {
+bool ThreeplMessageHandler::onMsgGroupLocation(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupLocation const& payload) {
+    std::stringstream ss;
+    ss << "Location: <a href=\"http://www.openstreetmap.org/?lat=" << payload.m_lattitude << "&amp;lon=" << payload.m_longitude << "&amp;zoom=19\">";
+    if (!payload.m_location.empty()) {
+        ss << payload.m_location;
+    } else {
+        ss << payload.m_lattitude << "," << payload.m_longitude;
+    }
+    ss << "</a>";
+    if (!payload.m_description.empty()) {
+        ss << "<br>\n" << payload.m_description;
+    }
+    serv_got_chat_in(m_connection.connection(), group->id(),
+                     msg.sender().toString().c_str(), PURPLE_MESSAGE_RECV,
+                     ss.str().c_str(), msg.time());
+    return true;
+}
+
+bool ThreeplMessageHandler::onMsgGroupPicture(ceema::Message const& msg, ceema::PayloadGroupPicture const& payload) {
     ceema::Blob pictBlob{payload.id, payload.size, payload.key};
     PrplBlobDownloadTransfer* transfer = new PrplBlobDownloadTransfer(m_blobAPI, pictBlob, ceema::BlobType::GROUP_IMAGE,
                                                                       m_connection.connection(), msg.sender().toString().c_str());
@@ -538,4 +606,18 @@ bool ThreeplMessageHandler::onMsgGroupPicture(ceema::Message const& msg, Threepl
 
 bool ThreeplMessageHandler::isOwner(ceema::group_uid const& id) const {
     return id.cid() == m_connection.account().id();
+}
+
+void ThreeplMessageHandler::requestSync(ceema::Message const& msg, ceema::group_uid const& uid) {
+    if (isOwner(uid)) {
+        // Cannot sync own group, inform other party the group is gone
+        ceema::PayloadGroupMembers payloadMembers;
+        payloadMembers.group = uid.gid();
+        payloadMembers.members.push_back(m_connection.account().id());
+        sendPayload(m_connection.account(), msg.sender(), std::move(payloadMembers));
+    } else {
+        ceema::PayloadGroupSync payload;
+        payload.group = uid.gid();
+        sendPayload(m_connection.account(), uid.cid(), std::move(payload));
+    }
 }

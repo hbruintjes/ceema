@@ -24,69 +24,48 @@
 #include <string>
 
 namespace ceema {
-    struct PayloadGroupMembers {
-        static constexpr MessageType Type = MessageType::GROUP_MEMBERS;
+    struct PayloadGroupInfo {
         static /*constexpr*/ MessageFlags default_flags() {
-            return MessageFlags{MessageFlag::NO_ACK, MessageFlag::NO_QUEUE, MessageFlag::GROUP};
+            return MessageFlags{MessageFlag::GROUP};
         }
+
+        group_id group;
+    };
+
+    struct PayloadGroupMembers : PayloadGroupInfo {
+        static constexpr MessageType Type = MessageType::GROUP_MEMBERS;
 
         static PayloadGroupMembers deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
         byte_vector serialize() const;
 
-        group_id group;
         std::vector<client_id> members;
     };
 
-    struct PayloadGroupTitle {
+    struct PayloadGroupTitle : PayloadGroupInfo {
         static constexpr MessageType Type = MessageType::GROUP_TITLE;
-        static /*constexpr*/ MessageFlags default_flags() {
-            return MessageFlags{MessageFlag::NO_ACK, MessageFlag::NO_QUEUE, MessageFlag::GROUP};
-        }
 
         static PayloadGroupTitle deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
         byte_vector serialize() const;
 
-        group_id group;
         std::string title;
     };
 
-    struct PayloadGroupIcon {
+    struct PayloadGroupIcon : PayloadGroupInfo {
         static constexpr MessageType Type = MessageType::GROUP_ICON;
-        static /*constexpr*/ MessageFlags default_flags() {
-            return MessageFlags{MessageFlag::NO_ACK, MessageFlag::NO_QUEUE, MessageFlag::GROUP};
-        }
 
         static PayloadGroupIcon deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
         byte_vector serialize() const;
-
-        group_id group;
 
         blob_id id;
         blob_size size;
         shared_key key;
     };
 
-    struct PayloadGroupSync {
+    struct PayloadGroupSync : PayloadGroupInfo {
         static constexpr MessageType Type = MessageType::GROUP_SYNC;
-        static /*constexpr*/ MessageFlags default_flags() {
-            return MessageFlags{MessageFlag::NO_ACK, MessageFlag::NO_QUEUE, MessageFlag::GROUP};
-        }
 
         static PayloadGroupSync deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
         byte_vector serialize() const;
-
-        group_id group;
     };
 
-    struct PayloadGroupLeave {
-        static constexpr MessageType Type = MessageType::GROUP_LEAVE;
-        static /*constexpr*/ MessageFlags default_flags() {
-            return MessageFlags{MessageFlag::GROUP};
-        }
-
-        group_uid group;
-
-        static PayloadGroupLeave deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
-        byte_vector serialize() const;
-    };
 }

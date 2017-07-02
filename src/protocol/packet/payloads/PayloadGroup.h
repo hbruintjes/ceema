@@ -24,11 +24,16 @@
 #include <string>
 
 namespace ceema {
+    struct PayloadGroupMessage {
+        static /*constexpr*/ MessageFlags default_flags() {
+            return MessageFlags{MessageFlag::GROUP};
+        }
+
+        group_uid group;
+    };
 
     template<typename Payload>
-    struct PayloadGroupBase : public Payload {
-        group_uid group;
-
+    struct PayloadGroupBase : public PayloadGroupMessage, public Payload {
         static /*constexpr*/ MessageFlags default_flags() {
             auto flags = Payload::default_flags();
             return flags | MessageFlag::GROUP;
@@ -62,14 +67,12 @@ namespace ceema {
         static constexpr MessageType Type = MessageType::GROUP_LOCATION;
     };
 
-    struct PayloadGroupPicture {
+    struct PayloadGroupPicture : public PayloadGroupMessage {
         static constexpr MessageType Type = MessageType::GROUP_PICTURE;
 
         static /*constexpr*/ MessageFlags default_flags() {
             return MessageFlags{MessageFlag::PUSH, MessageFlag::GROUP};
         }
-
-        group_uid group;
 
         blob_id id;
         blob_size size;
@@ -99,4 +102,10 @@ namespace ceema {
         static constexpr MessageType Type = MessageType::GROUP_POLL_VOTE;
     };
 
+    struct PayloadGroupLeave : public PayloadGroupMessage {
+        static constexpr MessageType Type = MessageType::GROUP_LEAVE;
+
+        static PayloadGroupLeave deserialize(byte_vector::const_iterator& payload_data, std::size_t size);
+        byte_vector serialize() const;
+    };
 }
