@@ -50,7 +50,6 @@ namespace ceema {
 
         GROUP_ICON = 0x50,
         GROUP_SYNC = 0x51,
-
         GROUP_POLL = 0x52,
         GROUP_POLL_VOTE = 0x53,
 

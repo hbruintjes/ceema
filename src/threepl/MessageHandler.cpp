@@ -116,43 +116,80 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
         // Silently fail...
     }
 
-    bool ack;
+    bool ack = false;
     switch(msg.payloadType()) {
-        case ceema::MessageType::MESSAGE_STATUS:
-            ack = onMsgStatus(msg, msg.payload<ceema::PayloadMessageStatus>());
-            break;
-        case ceema::MessageType::CLIENT_TYPING:
-            ack = onMsgTyping(msg, msg.payload<ceema::PayloadTyping>());
-            break;
+
         case ceema::MessageType::TEXT:
             ack = onMsgText(msg, msg.payload<ceema::PayloadText>());
+            break;
+        case ceema::MessageType::PICTURE:
+            ack = onMsgPicture(msg, msg.payload<ceema::PayloadPicture>());
             break;
         case ceema::MessageType::LOCATION:
             ack = onMsgLocation(msg, msg.payload<ceema::PayloadLocation>());
             break;
+        case ceema::MessageType::VIDEO:
+            ack = onMsgVideo(msg, msg.payload<ceema::PayloadVideo>(), true);
+            break;
+        case ceema::MessageType::AUDIO:
+            ack = onMsgAudio(msg, msg.payload<ceema::PayloadAudio>(), true);
+            break;
+
+            //TODO: Poll
+
+        case ceema::MessageType::FILE:
+            ack = onMsgFile(msg, msg.payload<ceema::PayloadFile>(), true);
+            break;
+
         case ceema::MessageType::ICON:
             ack = onMsgIcon(msg, msg.payload<ceema::PayloadIcon>());
             break;
         case ceema::MessageType::ICON_CLEAR:
             ack = onMsgIconClear(msg, msg.payload<ceema::PayloadIconClear>());
             break;
-        case ceema::MessageType::FILE:
-            ack = onMsgFile(msg, msg.payload<ceema::PayloadFile>());
-            break;
-        case ceema::MessageType::PICTURE:
-            ack = onMsgPicture(msg, msg.payload<ceema::PayloadPicture>());
-            break;
-        case ceema::MessageType::AUDIO:
-            ack = onMsgAudio(msg, msg.payload<ceema::PayloadAudio>());
-            break;
-        case ceema::MessageType::VIDEO:
-            ack = onMsgVideo(msg, msg.payload<ceema::PayloadVideo>());
-            break;
-        case ceema::MessageType::GROUP_SYNC: {
-            ceema::PayloadGroupSync const& payload = msg.payload<ceema::PayloadGroupSync>();
-            ThreeplGroup* group = m_groups.find_group(msg.recipient(), payload.group);
+
+        case ceema::MessageType::GROUP_TEXT: {
+            ceema::PayloadGroupText const& payload = msg.payload<ceema::PayloadGroupText>();
+            ThreeplGroup* group = find_or_create_group(payload.group, true);
             if (group) {
-                ack = onMsgGroupSync(msg, group, payload);
+                ack = onMsgGroupText(msg, group, payload);
+            }
+            break; }
+
+        case ceema::MessageType::GROUP_PICTURE: {
+            ceema::PayloadGroupPicture const& payload = msg.payload<ceema::PayloadGroupPicture>();
+            ThreeplGroup* group = find_or_create_group(payload.group, true);
+            if (group) {
+                ack = onMsgGroupPicture(msg, group, payload);
+            }
+            break; }
+        case ceema::MessageType::GROUP_VIDEO: {
+            ceema::PayloadGroupVideo const& payload = msg.payload<ceema::PayloadGroupVideo>();
+            ThreeplGroup* group = find_or_create_group(payload.group, true);
+            if (group) {
+                ack = onMsgVideo(msg, payload, false);
+            }
+            break; }
+        case ceema::MessageType::GROUP_AUDIO: {
+            ceema::PayloadGroupAudio const& payload = msg.payload<ceema::PayloadGroupAudio>();
+            ThreeplGroup* group = find_or_create_group(payload.group, true);
+            if (group) {
+                ack = onMsgAudio(msg, payload, false);
+            }
+            break; }
+        case ceema::MessageType::GROUP_FILE: {
+            ceema::PayloadGroupFile const& payload = msg.payload<ceema::PayloadGroupFile>();
+            ThreeplGroup* group = find_or_create_group(payload.group, true);
+            if (group) {
+                ack = onMsgFile(msg, payload, false);
+            }
+            break; }
+
+        case ceema::MessageType::GROUP_MEMBERS: {
+            ceema::PayloadGroupMembers const& payload = msg.payload<ceema::PayloadGroupMembers>();
+            ThreeplGroup* group = m_groups.find_group(msg.sender(), payload.group);
+            if (group) {
+                ack = onMsgGroupMembers(msg, group, payload);
             }
             break; }
         case ceema::MessageType::GROUP_TITLE: {
@@ -162,13 +199,6 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
                 ack = onMsgGroupTitle(msg, group, payload);
             }
             break; }
-        case ceema::MessageType::GROUP_MEMBERS: {
-            ceema::PayloadGroupMembers const& payload = msg.payload<ceema::PayloadGroupMembers>();
-            ThreeplGroup* group = m_groups.find_group(msg.sender(), payload.group);
-            if (group) {
-                ack = onMsgGroupMembers(msg, group, payload);
-            }
-            break; }
         case ceema::MessageType::GROUP_LEAVE: {
             ceema::PayloadGroupLeave const& payload = msg.payload<ceema::PayloadGroupLeave>();
             ThreeplGroup* group = m_groups.find_group(payload.group);
@@ -176,13 +206,28 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
                 ack = onMsgGroupLeave(msg, group, payload);
             }
             break; }
-        case ceema::MessageType::GROUP_TEXT: {
-            ceema::PayloadGroupText const& payload = msg.payload<ceema::PayloadGroupText>();
-            ThreeplGroup* group = find_or_create_group(payload.group, true);
+
+        case ceema::MessageType::GROUP_ICON: {
+            ceema::PayloadGroupIcon const& payload = msg.payload<ceema::PayloadGroupIcon>();
+            ThreeplGroup* group = m_groups.find_group(msg.recipient(), payload.group);
             if (group) {
-                ack = onMsgGroupText(msg, group, payload);
+                //ack = onMsgGroupIcon(msg, group, payload);
             }
             break; }
+        case ceema::MessageType::GROUP_SYNC: {
+            ceema::PayloadGroupSync const& payload = msg.payload<ceema::PayloadGroupSync>();
+            ThreeplGroup* group = m_groups.find_group(msg.recipient(), payload.group);
+            if (group) {
+                ack = onMsgGroupSync(msg, group, payload);
+            }
+            break; }
+
+        case ceema::MessageType::MESSAGE_STATUS:
+            ack = onMsgStatus(msg, msg.payload<ceema::PayloadMessageStatus>());
+            break;
+        case ceema::MessageType::CLIENT_TYPING:
+            ack = onMsgTyping(msg, msg.payload<ceema::PayloadTyping>());
+            break;
         default:
             ack = false;
             {
@@ -297,14 +342,17 @@ bool ThreeplMessageHandler::onMsgIconClear(ceema::Message const& msg, ceema::Pay
     return false;
 }
 
-bool ThreeplMessageHandler::onMsgFile(ceema::Message const& msg, ceema::PayloadFile const& payload) {
+bool ThreeplMessageHandler::onMsgFile(ceema::Message const& msg, ceema::PayloadFile const& payload, bool del) {
     ceema::Blob fileBlob{payload.id, payload.size, payload.key};
     PrplBlobDownloadTransfer* transfer = new PrplBlobDownloadTransfer(m_blobAPI, fileBlob, ceema::BlobType::FILE,
                                                                       m_connection.connection(), msg.sender().toString().c_str());
-    transfer->get_future().next([this, id{payload.id}](ceema::future<void> fut) {
-        m_blobAPI.deleteBlob(id);
-        fut.get();
-    });
+
+    if (del) {
+        transfer->get_future().next([this, id{payload.id}](ceema::future<void> fut) {
+            m_blobAPI.deleteBlob(id);
+            fut.get();
+        });
+    }
 
     purple_xfer_set_filename(transfer->xfer(), payload.filename.c_str());
     if (payload.caption.size()) {
@@ -314,8 +362,10 @@ bool ThreeplMessageHandler::onMsgFile(ceema::Message const& msg, ceema::PayloadF
     if (payload.has_thumb) {
         auto thumbTransfer = new ceema::BlobDownloadTransfer(payload.thumb_id, ceema::BlobType::FILE_THUMB, payload.key);
         m_blobAPI.downloadFile(thumbTransfer, payload.thumb_id);
-        thumbTransfer->get_future().next([this, transfer, id{payload.thumb_id}, sender{msg.sender()}](ceema::future<ceema::byte_vector> fut) {
-            m_blobAPI.deleteBlob(id);
+        thumbTransfer->get_future().next([this, transfer, id{payload.thumb_id}, sender{msg.sender()}, del](ceema::future<ceema::byte_vector> fut) {
+            if (del) {
+                m_blobAPI.deleteBlob(id);
+            }
             try {
                 ceema::byte_vector data = fut.get();
                 purple_xfer_set_thumbnail(transfer->xfer(), data.data(), data.size(), "jpg");
@@ -362,14 +412,17 @@ bool ThreeplMessageHandler::onMsgPicture(ceema::Message const& msg, ceema::Paylo
     return true;
 }
 
-bool ThreeplMessageHandler::onMsgAudio(ceema::Message const& msg, ceema::PayloadAudio const& payload) {
+bool ThreeplMessageHandler::onMsgAudio(ceema::Message const& msg, ceema::PayloadAudio const& payload, bool del) {
     ceema::Blob audioBlob{payload.id, payload.size, payload.key};
     PrplBlobDownloadTransfer* transfer = new PrplBlobDownloadTransfer(m_blobAPI, audioBlob, ceema::BlobType::AUDIO,
                                                                       m_connection.connection(), msg.sender().toString().c_str());
-    transfer->get_future().next([this, id{payload.id}](ceema::future<void> fut) {
-        m_blobAPI.deleteBlob(id);
-        fut.get();
-    });
+
+    if (del) {
+        transfer->get_future().next([this, id{payload.id}](ceema::future<void> fut) {
+            m_blobAPI.deleteBlob(id);
+            fut.get();
+        });
+    }
 
     std::string filename = formatstr() << audioBlob.id << ".mp4";
     purple_xfer_set_filename(transfer->xfer(), filename.c_str());
@@ -381,14 +434,16 @@ bool ThreeplMessageHandler::onMsgAudio(ceema::Message const& msg, ceema::Payload
     return true;
 }
 
-bool ThreeplMessageHandler::onMsgVideo(ceema::Message const& msg, ceema::PayloadVideo const& payload) {
+bool ThreeplMessageHandler::onMsgVideo(ceema::Message const& msg, ceema::PayloadVideo const& payload, bool del) {
     ceema::Blob videoBlob{payload.id, payload.size, payload.key};
     PrplBlobDownloadTransfer* transfer = new PrplBlobDownloadTransfer(m_blobAPI, videoBlob, ceema::BlobType::VIDEO,
                                                                       m_connection.connection(), msg.sender().toString().c_str());
-    transfer->get_future().next([this, id{payload.id}](ceema::future<void> fut) {
-        m_blobAPI.deleteBlob(id);
-        fut.get();
-    });
+    if (del) {
+        transfer->get_future().next([this, id{payload.id}](ceema::future<void> fut) {
+            fut.get();
+            m_blobAPI.deleteBlob(id);
+        });
+    }
 
     std::string filename = formatstr() << videoBlob.id << ".mp4";
     purple_xfer_set_filename(transfer->xfer(), filename.c_str());
@@ -460,6 +515,18 @@ bool ThreeplMessageHandler::onMsgGroupText(ceema::Message const& msg, ThreeplGro
     serv_got_chat_in(m_connection.connection(), group->id(),
                      msg.sender().toString().c_str(), PURPLE_MESSAGE_RECV,
                      payload.m_text.c_str(), msg.time());
+
+    return true;
+}
+
+bool ThreeplMessageHandler::onMsgGroupPicture(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupPicture const& payload) {
+    ceema::Blob pictBlob{payload.id, payload.size, payload.key};
+    PrplBlobDownloadTransfer* transfer = new PrplBlobDownloadTransfer(m_blobAPI, pictBlob, ceema::BlobType::GROUP_IMAGE,
+                                                                      m_connection.connection(), msg.sender().toString().c_str());
+
+    std::string filename = formatstr() << pictBlob.id << ".jpg";
+    purple_xfer_set_filename(transfer->xfer(), filename.c_str());
+    purple_xfer_request(transfer->xfer());
 
     return true;
 }

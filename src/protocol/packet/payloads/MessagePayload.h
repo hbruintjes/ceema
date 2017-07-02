@@ -52,21 +52,12 @@ namespace ceema {
                 PayloadLocation,
                 PayloadVideo,
                 PayloadAudio,
-                PayloadFile,
                 PayloadPoll,
                 PayloadPollVote,
+                PayloadFile,
 
                 PayloadIcon,
                 PayloadIconClear,
-
-                PayloadMessageStatus,
-                PayloadTyping,
-
-                PayloadGroupMembers,
-                PayloadGroupTitle,
-                PayloadGroupIcon,
-                PayloadGroupLeave,
-                PayloadGroupSync,
 
                 PayloadGroupText,
                 PayloadGroupLocation,
@@ -74,8 +65,18 @@ namespace ceema {
                 PayloadGroupVideo,
                 PayloadGroupAudio,
                 PayloadGroupFile,
+
+                PayloadGroupMembers,
+                PayloadGroupTitle,
+                PayloadGroupLeave,
+
+                PayloadGroupIcon,
+                PayloadGroupSync,
                 PayloadGroupPoll,
-                PayloadGroupPollVote
+                PayloadGroupPollVote,
+
+                PayloadMessageStatus,
+                PayloadTyping
         > m_payload;
 
         MessagePayload() : m_payload(PayloadNone{}) {}
