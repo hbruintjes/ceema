@@ -32,19 +32,19 @@ namespace ceema {
         group_uid group;
     };
 
-    template<typename Payload>
+    template<typename Impl, typename Payload>
     struct PayloadGroupBase : public PayloadGroupMessage, public Payload {
         static /*constexpr*/ MessageFlags default_flags() {
             auto flags = Payload::default_flags();
             return flags | MessageFlag::GROUP;
         }
 
-        static PayloadGroupBase deserialize(byte_vector::const_iterator& payload_data, std::size_t size) {
+        static Impl deserialize(byte_vector::const_iterator& payload_data, std::size_t size) {
             if (size < group_uid::array_size) {
                 throw std::runtime_error("Invalid group payload");
             }
 
-            PayloadGroupBase<Payload> payload;
+            Impl payload;
             payload_data = copy_iter(payload_data, payload.group);
             size -= group_uid::array_size;
             static_cast<Payload&>(payload) = Payload::deserialize(payload_data, size);
@@ -59,11 +59,11 @@ namespace ceema {
         }
     };
 
-    struct PayloadGroupText : public PayloadGroupBase<PayloadText> {
+    struct PayloadGroupText : public PayloadGroupBase<PayloadGroupText, PayloadText> {
         static constexpr MessageType Type = MessageType::GROUP_TEXT;
     };
 
-    struct PayloadGroupLocation : public PayloadGroupBase<PayloadLocation>  {
+    struct PayloadGroupLocation : public PayloadGroupBase<PayloadGroupLocation, PayloadLocation>  {
         static constexpr MessageType Type = MessageType::GROUP_LOCATION;
     };
 
@@ -82,23 +82,23 @@ namespace ceema {
         byte_vector serialize() const;
     };
 
-    struct PayloadGroupVideo : public PayloadGroupBase<PayloadVideo>  {
+    struct PayloadGroupVideo : public PayloadGroupBase<PayloadGroupVideo, PayloadVideo>  {
         static constexpr MessageType Type = MessageType::GROUP_VIDEO;
     };
 
-    struct PayloadGroupAudio : public PayloadGroupBase<PayloadAudio> {
+    struct PayloadGroupAudio : public PayloadGroupBase<PayloadGroupAudio, PayloadAudio> {
         static constexpr MessageType Type = MessageType::GROUP_AUDIO;
     };
 
-    struct PayloadGroupFile : public PayloadGroupBase<PayloadFile> {
+    struct PayloadGroupFile : public PayloadGroupBase<PayloadGroupFile, PayloadFile> {
         static constexpr MessageType Type = MessageType::GROUP_FILE;
     };
 
-    struct PayloadGroupPoll : public PayloadGroupBase<PayloadPoll> {
+    struct PayloadGroupPoll : public PayloadGroupBase<PayloadGroupPoll, PayloadPoll> {
         static constexpr MessageType Type = MessageType::GROUP_POLL;
     };
 
-    struct PayloadGroupPollVote : public PayloadGroupBase<PayloadPollVote> {
+    struct PayloadGroupPollVote : public PayloadGroupBase<PayloadGroupPollVote, PayloadPollVote> {
         static constexpr MessageType Type = MessageType::GROUP_POLL_VOTE;
     };
 
