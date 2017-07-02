@@ -611,10 +611,16 @@ bool ThreeplMessageHandler::isOwner(ceema::group_uid const& id) const {
 void ThreeplMessageHandler::requestSync(ceema::Message const& msg, ceema::group_uid const& uid) {
     if (isOwner(uid)) {
         // Cannot sync own group, inform other party the group is gone
+        //TODO: Should only send member list update when group is still known?
         ceema::PayloadGroupMembers payloadMembers;
         payloadMembers.group = uid.gid();
         payloadMembers.members.push_back(m_connection.account().id());
         sendPayload(m_connection.account(), msg.sender(), std::move(payloadMembers));
+        // If own leaves group: It's gone
+        ceema::PayloadGroupLeave payloadLeave;
+        payloadLeave.group = uid;
+        sendPayload(m_connection.account(), msg.sender(), std::move(payloadLeave));
+
     } else {
         ceema::PayloadGroupSync payload;
         payload.group = uid.gid();
