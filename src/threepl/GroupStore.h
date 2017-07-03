@@ -92,7 +92,14 @@ public:
     }
 
     std::string chat_name() const {
-        return ceema::hex_encode(m_groupid) + "@" + m_owner.toString();
+        return chat_name(m_groupuid);
+    }
+
+    static std::string chat_name(ceema::group_uid uid) {
+        return chat_name(uid.gid(), uid.cid());
+    }
+    static std::string chat_name(ceema::group_id gid, ceema::client_id cid) {
+        return ceema::hex_encode(gid) + "@" + cid.toString();
     }
 };
 

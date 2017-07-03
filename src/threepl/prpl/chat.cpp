@@ -13,7 +13,15 @@ char* threepl_get_chat_name(GHashTable *components) {
     // The following would be better, but libpurple does not provide account or connection
     //ThreeplGroup* group_data = connection->group_store().find_or_create(components);
 
-    return g_strdup_printf("%s owned by %s", id, owner);
+    try {
+        std::string chat_name = ThreeplGroup::chat_name(
+                ceema::group_id(ceema::hex_decode(std::string(id))),
+                ceema::client_id::fromString(owner));
+        return g_strdup(chat_name.c_str());
+    } catch (std::exception& e) {
+        // Crappy input, return empty string
+        return g_strdup("");
+    }
 }
 
 void threepl_join_chat(PurpleConnection *gc, GHashTable* components) {
@@ -37,6 +45,7 @@ void threepl_reject_chat(PurpleConnection *gc, GHashTable *components) {
 
 void threepl_chat_leave(PurpleConnection *gc, int id) {
     PurpleConversation *conv = purple_find_chat(gc, id);
+    //TODO: send leave message, or destroy the group?
 }
 */
 
@@ -56,6 +65,7 @@ GList* threepl_chat_info(PurpleConnection*) {
 }
 
 GHashTable* threepl_chat_info_defaults(PurpleConnection* gc, const char* room) {
+    // Room is the name as formed by threepl_get_chat_name
     ThreeplConnection* connection = static_cast<ThreeplConnection*>(purple_connection_get_protocol_data(gc));
 
     GHashTable* defaults = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
