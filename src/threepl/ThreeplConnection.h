@@ -58,6 +58,7 @@ public:
     //TODO: make TLS usage configurable
     ThreeplConnection(PurpleAccount* acct, ceema::Account const& account) :
             m_identAPI(m_httpManager), m_blobAPI(m_httpManager, true), m_store(m_identAPI),
+            m_groups(*this),
             m_handler(*this, m_store, m_groups, m_blobAPI), m_session(account),
             m_account(account), m_prpl_acct(acct),
             m_connection(purple_account_get_connection(m_prpl_acct)),
@@ -109,7 +110,6 @@ public:
 
     void close();
 
-    //TODO: the future should refernece the message being sent, not just the ID
     template<typename Payload>
     ceema::future<std::unique_ptr<ceema::Message>> send_message(ceema::client_id const& recipient, Payload&& payload) {
         if (state() != State::CONNECTED) {

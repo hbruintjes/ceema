@@ -28,16 +28,7 @@ void threepl_join_chat(PurpleConnection *gc, GHashTable* components) {
     ThreeplConnection* connection = static_cast<ThreeplConnection*>(purple_connection_get_protocol_data(gc));
 
     ThreeplGroup* group_data = connection->group_store().find_or_create(components);
-    PurpleConversation* conv = purple_find_chat(gc, group_data->id());
-    // Check if the chat already exists
-    if (!conv) {
-        auto chat_name = group_data->chat_name();
-        conv = serv_got_joined_chat(gc, group_data->id(), chat_name.c_str());
-        connection->group_store().update_chat(connection->acct(), *group_data);
-    } else {
-        purple_conversation_present(conv);
-    }
-    purple_conv_chat_set_topic(PURPLE_CONV_CHAT(conv), "", group_data->name().c_str());
+    group_data->create_conversation(gc);
 }
 
 /*

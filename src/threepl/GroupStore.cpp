@@ -4,7 +4,83 @@
 
 #include <libpurple/debug.h>
 #include <cstring>
+#include <logging/logging.h>
 #include "GroupStore.h"
+
+PurpleConvChat* ThreeplGroup::find_conversation(PurpleConnection *gc) const {
+    auto conv = purple_find_chat(gc, id());
+    return conv ? PURPLE_CONV_CHAT(conv) : NULL;
+}
+
+PurpleConvChat* ThreeplGroup::create_conversation(PurpleConnection *gc) const {
+    auto conv = find_conversation(gc);
+    if (conv) {
+        return conv;
+    }
+
+    conv = PURPLE_CONV_CHAT(serv_got_joined_chat(gc, id(), chat_name().c_str()));
+    // Set current nickname
+    const char* nick = purple_account_get_string(purple_connection_get_account(gc),
+                                                 "nickname", "");
+    purple_conv_chat_set_nick(conv, nick);
+
+    // Update group data
+    update_conversation(conv);
+
+    return conv;
+}
+
+void ThreeplGroup::update_conversation(PurpleConvChat *conv) const {
+    // Set topic
+    const char* topic = purple_conv_chat_get_topic(conv);
+    if (!topic || name() != topic) {
+        purple_conv_chat_set_topic(conv, owner().toString().c_str(),
+                                   name().c_str());
+    }
+
+    // Set members
+    GList* users = NULL;
+    GList* flags = NULL;
+    for(ceema::client_id const& cid: members()) {
+        users = g_list_append(users, g_strdup(cid.toString().c_str()));
+        flags = g_list_append(flags, GINT_TO_POINTER( cid == owner() ? PURPLE_CBFLAGS_FOUNDER : PURPLE_CBFLAGS_NONE ));
+    }
+    purple_conv_chat_add_users(conv, users, NULL, flags, false);
+
+    g_list_free_full(users, &g_free);
+    g_list_free(flags);
+}
+
+PurpleChat* ThreeplGroup::find_blist_chat(PurpleAccount *account) const {
+    return purple_blist_find_chat(account, chat_name().c_str());
+}
+
+void ThreeplGroup::update_blist_chat(PurpleChat *chat) const {
+    purple_blist_node_set_string(&chat->node, "name", name().c_str());
+    if (!name().empty()) {
+        // Alias the chat to the title, if not set to anything else
+        // TODO: tramples possible user-set alias
+        const char* orig_alias = chat->alias;
+        if (!orig_alias || (name() != orig_alias)) {
+            purple_blist_alias_chat(chat, name().c_str());
+        }
+    }
+
+    std::string memberlist;
+    memberlist.reserve(members().size() * ceema::client_id::array_size + 1);
+    for(auto const& cid: members()) {
+        memberlist.append(cid.toString());
+    }
+    purple_blist_node_set_string(&chat->node, "members", memberlist.c_str());
+}
+
+void ThreeplGroup::set_name(std::string name) {
+    if (name.size()) {
+        m_name = std::move(name);
+    } else {
+        m_name = ceema::hex_encode(m_groupid) + " owned by " + m_owner.toString();
+    }
+}
 
 ThreeplGroup* GroupStore::find_or_create(GHashTable* components) {
     const char* owner = static_cast<const char*>(g_hash_table_lookup(components, "owner"));
@@ -18,57 +94,20 @@ ThreeplGroup* GroupStore::find_or_create(GHashTable* components) {
 }
 
 PurpleChat* GroupStore::find_chat(PurpleAccount* account, ThreeplGroup const& group) const {
-    return purple_blist_find_chat(account, group.chat_name().c_str());
+    return group.find_blist_chat(account);
 }
 
 void GroupStore::update_chat(PurpleAccount* account, ThreeplGroup const& group) const {
     // Update stored data if any
-    PurpleChat* chat = purple_blist_find_chat(account, group.chat_name().c_str());
+    PurpleChat* chat = group.find_blist_chat(account);
     if (chat) {
-        purple_blist_node_set_string(&chat->node, "name", group.name().c_str());
-        if (!group.name().empty()) {
-            // Alias the chat to the title
-            const char* orig_alias = chat->alias;
-            if (!orig_alias) {
-                purple_blist_alias_chat(chat, group.name().c_str());
-            }
-        }
-
-        char* memberlist = new char[group.members().size() * ceema::client_id::array_size + 1];
-        char* iter = memberlist;
-        for(auto const& cid: group.members()) {
-            iter = std::copy(cid.begin(), cid.end(), iter);
-        }
-        *iter = '\0';
-        purple_blist_node_set_string(&chat->node, "members", memberlist);
-        delete [] memberlist;
+        group.update_blist_chat(chat);
     }
+
     // Update conversation if any
-
-    PurpleConversation* conv = purple_find_chat(purple_account_get_connection(account), group.id());
-    PurpleConvChat* chat_conv = NULL;
-    if (conv) {
-        chat_conv = purple_conversation_get_chat_data(conv);
-    }
+    PurpleConvChat* chat_conv = group.find_conversation(purple_account_get_connection(account));
     if (chat_conv) {
-        purple_conv_chat_clear_users(chat_conv);
-        GList* users = NULL;
-        GList* flags = NULL;
-        for(ceema::client_id const& cid: group.members()) {
-            users = g_list_append(users, g_strdup(cid.toString().c_str()));
-            flags = g_list_append(flags, GINT_TO_POINTER( cid == group.owner() ? PURPLE_CBFLAGS_FOUNDER : PURPLE_CBFLAGS_NONE ));
-        }
-        purple_conv_chat_add_users(chat_conv, users, NULL, flags, false);
-
-        g_list_free_full(users, &g_free);
-        g_list_free(flags);
-
-        // Set title
-        //purple_conversation_set_title(conv, group.name().c_str());
-
-        // Set current nickname
-        const char* nick = purple_account_get_string(account, "nickname", "");
-        purple_conv_chat_set_nick(chat_conv, nick);
+        group.update_conversation(chat_conv);
     }
 }
 

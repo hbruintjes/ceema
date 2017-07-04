@@ -533,7 +533,21 @@ bool ThreeplMessageHandler::onMsgGroupMembers(ceema::Message const& msg, Threepl
 }
 
 bool ThreeplMessageHandler::onMsgGroupIcon(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupIcon const& payload) {
-
+    auto iconTransfer = new ceema::BlobDownloadTransfer(payload.id, ceema::BlobType::GROUP_ICON, payload.key);
+    PurpleChat* chat = group->find_blist_chat(m_connection.acct());
+    if (!chat) {
+        return false;
+    }
+    m_blobAPI.downloadFile(iconTransfer, payload.id);
+    iconTransfer->get_future().next([this, id{payload.id}, chat](ceema::future<ceema::byte_vector> fut) {
+        try {
+            ceema::byte_vector data = fut.get();
+            auto icon_data = g_memdup(data.data(), data.size());
+            purple_buddy_icons_node_set_custom_icon(PURPLE_BLIST_NODE(chat), static_cast<guchar*>(icon_data), data.size());
+        } catch (std::exception& e) {
+            LOG_DBG("Icon error " << e.what());
+        }
+    });
     return false;
 }
 

@@ -10,6 +10,8 @@
 #include <libpurple/blist.h>
 #include <encoding/hex.h>
 
+class ThreeplConnection;
+
 class ThreeplGroup {
     ceema::client_id m_owner;
     ceema::group_id m_groupid;
@@ -67,13 +69,7 @@ public:
         return m_name;
     }
 
-    void set_name(std::string name) {
-        if (name.size()) {
-            m_name = std::move(name);
-        } else {
-            m_name = ceema::hex_encode(m_groupid) + " owned by " + m_owner.toString();
-        }
-    }
+    void set_name(std::string name);
 
     ceema::client_id owner() const {
         return m_owner;
@@ -101,14 +97,23 @@ public:
     static std::string chat_name(ceema::group_id gid, ceema::client_id cid) {
         return ceema::hex_encode(gid) + "@" + cid.toString();
     }
+
+    PurpleConvChat* find_conversation(PurpleConnection *gc) const;
+    PurpleConvChat* create_conversation(PurpleConnection *gc) const;
+    void update_conversation(PurpleConvChat *conv) const;
+    PurpleChat* find_blist_chat(PurpleAccount *account) const;
+    void update_blist_chat(PurpleChat *chat) const;
 };
 
 
 class GroupStore {
     // TODO: should be map, but no hash method yet
     std::vector<ThreeplGroup> m_groups;
+    ThreeplConnection &m_conn;
 
 public:
+    GroupStore(ThreeplConnection &conn) : m_conn(conn) {}
+
     ThreeplGroup* find_group(ceema::group_uid uid, bool add_if_new = false) {
         return find_group(uid.cid(), uid.gid(), add_if_new);
     }
