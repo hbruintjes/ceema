@@ -121,7 +121,7 @@ static char icon_types[] = "jpg,png";
 
 static PurplePluginProtocolInfo threepl_protocol_info =
 {
-  static_cast<PurpleProtocolOptions>(0),  /* options */
+  static_cast<PurpleProtocolOptions>(OPT_PROTO_CHAT_TOPIC),  /* options */
   NULL,               /* user_splits, initialized in threepl_init() */
   NULL,               /* protocol_options, initialized in threepl_init() */
   {icon_types, 1, 1, 512, 512, 20*1024*1024, PURPLE_ICON_SCALE_SEND},
@@ -171,7 +171,7 @@ static PurplePluginProtocolInfo threepl_protocol_info =
   NULL,             /* set_buddy_icon */
   NULL,               /* remove_group */
   NULL,                                /* get_cb_real_name */
-  NULL,             /* set_chat_topic */
+  threepl_set_chat_topic,             /* set_chat_topic */
   threepl_find_blist_chat,                                /* find_blist_chat */
   NULL,          /* roomlist_get_list */
   NULL,            /* roomlist_cancel */

@@ -31,11 +31,13 @@ void threepl_join_chat(PurpleConnection *gc, GHashTable* components) {
     PurpleConversation* conv = purple_find_chat(gc, group_data->id());
     // Check if the chat already exists
     if (!conv) {
-        serv_got_joined_chat(gc, group_data->id(), group_data->chat_name().c_str());
+        auto chat_name = group_data->chat_name();
+        conv = serv_got_joined_chat(gc, group_data->id(), chat_name.c_str());
         connection->group_store().update_chat(connection->acct(), *group_data);
     } else {
         purple_conversation_present(conv);
     }
+    purple_conv_chat_set_topic(PURPLE_CONV_CHAT(conv), "", group_data->name().c_str());
 }
 
 /*
@@ -192,4 +194,23 @@ int threepl_chat_send(PurpleConnection* gc, int id, const char* message, PurpleM
 
     // Echo the message regardless of error (some clients may succeed while others fail)
     return 1;
+}
+
+void threepl_set_chat_topic(PurpleConnection *gc, int id, const char *topic) {
+    //TODO: protocol stuff
+    ThreeplConnection* connection = static_cast<ThreeplConnection*>(purple_connection_get_protocol_data(gc));
+
+    PurpleConversation* conv = purple_find_chat(gc, id);
+    ThreeplGroup* group_data = connection->group_store().find_group(id);
+    if (!conv || !group_data) {
+        purple_notify_error(gc, "Error", "Unable to set topic", "The group does not exist");
+        return;
+    }
+
+    group_data->set_name(topic);
+
+    bool proto_OK = false;
+    if (proto_OK) {
+        purple_conv_chat_set_topic(PURPLE_CONV_CHAT(conv), "", group_data->name().c_str());
+    }
 }

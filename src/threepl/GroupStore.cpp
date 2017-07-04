@@ -26,6 +26,14 @@ void GroupStore::update_chat(PurpleAccount* account, ThreeplGroup const& group) 
     PurpleChat* chat = purple_blist_find_chat(account, group.chat_name().c_str());
     if (chat) {
         purple_blist_node_set_string(&chat->node, "name", group.name().c_str());
+        if (!group.name().empty()) {
+            // Alias the chat to the title
+            const char* orig_alias = chat->alias;
+            if (!orig_alias) {
+                purple_blist_alias_chat(chat, group.name().c_str());
+            }
+        }
+
         char* memberlist = new char[group.members().size() * ceema::client_id::array_size + 1];
         char* iter = memberlist;
         for(auto const& cid: group.members()) {
@@ -56,7 +64,7 @@ void GroupStore::update_chat(PurpleAccount* account, ThreeplGroup const& group) 
         g_list_free(flags);
 
         // Set title
-        purple_conversation_set_title(conv, group.name().c_str());
+        //purple_conversation_set_title(conv, group.name().c_str());
 
         // Set current nickname
         const char* nick = purple_account_get_string(account, "nickname", "");
@@ -86,12 +94,16 @@ void GroupStore::load_chats(PurpleAccount* account) {
         const char* id = static_cast<const char*>(g_hash_table_lookup(components, "id"));
         const char* owner = static_cast<const char*>(g_hash_table_lookup(components, "owner"));
         const char* members = purple_blist_node_get_string(&chat->node, "members");
+        const char* name = purple_blist_node_get_string(&chat->node, "name");
 
         ceema::group_id gid;
         ceema::hex_decode(std::string(id), gid);
         ceema::client_id owner_id = ceema::client_id::fromString(owner);
 
         ThreeplGroup* group = add_group(owner_id, gid);
+        if (name && name[0] != 0) {
+            group->set_name(name);
+        }
         if (members && (strlen(members) % ceema::client_id::array_size) == 0) {
             size_t len = strlen(members);
             for(size_t i = 0; i < len; i += ceema::client_id::array_size) {
