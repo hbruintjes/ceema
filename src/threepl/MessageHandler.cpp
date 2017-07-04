@@ -581,6 +581,10 @@ bool ThreeplMessageHandler::onMsgGroupLeave(ceema::Message const& msg, ThreeplGr
 }
 
 bool ThreeplMessageHandler::onMsgGroupText(ceema::Message const& msg, ThreeplGroup* group, ceema::PayloadGroupText const& payload) {
+    // Check the conversation is running
+    // This completely ignores persistent/auto-join, but
+    // Threema simply works differently
+    group->create_conversation(m_connection.connection());
     serv_got_chat_in(m_connection.connection(), group->id(),
                      msg.sender().toString().c_str(), PURPLE_MESSAGE_RECV,
                      payload.m_text.c_str(), msg.time());
@@ -600,6 +604,8 @@ bool ThreeplMessageHandler::onMsgGroupLocation(ceema::Message const& msg, Threep
     if (!payload.m_description.empty()) {
         ss << "<br>\n" << payload.m_description;
     }
+
+    group->create_conversation(m_connection.connection());
     serv_got_chat_in(m_connection.connection(), group->id(),
                      msg.sender().toString().c_str(), PURPLE_MESSAGE_RECV,
                      ss.str().c_str(), msg.time());
