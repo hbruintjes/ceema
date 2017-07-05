@@ -45,6 +45,7 @@ void ThreeplGroup::update_conversation(PurpleConvChat *conv) const {
         users = g_list_append(users, g_strdup(cid.toString().c_str()));
         flags = g_list_append(flags, GINT_TO_POINTER( cid == owner() ? PURPLE_CBFLAGS_FOUNDER : PURPLE_CBFLAGS_NONE ));
     }
+    purple_conv_chat_clear_users(conv);
     purple_conv_chat_add_users(conv, users, NULL, flags, false);
 
     g_list_free_full(users, &g_free);
