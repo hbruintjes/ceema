@@ -24,6 +24,15 @@ PurpleConvChat* ThreeplGroup::create_conversation(PurpleConnection *gc) const {
                                                  "nickname", "");
     purple_conv_chat_set_nick(conv, nick);
 
+    // Set initial members
+    GList* users = NULL;
+    GList* flags = NULL;
+    for(ceema::client_id const& cid: members()) {
+        users = g_list_append(users, g_strdup(cid.toString().c_str()));
+        flags = g_list_append(flags, GINT_TO_POINTER( cid == owner() ? PURPLE_CBFLAGS_FOUNDER : PURPLE_CBFLAGS_NONE ));
+    }
+    purple_conv_chat_add_users(conv, users, NULL, flags, false);
+
     // Update group data
     update_conversation(conv);
 
@@ -39,17 +48,28 @@ void ThreeplGroup::update_conversation(PurpleConvChat *conv) const {
     }
 
     // Set members
+    GList* new_users = NULL;
     GList* users = NULL;
+    GList* new_flags = NULL;
     GList* flags = NULL;
     for(ceema::client_id const& cid: members()) {
-        users = g_list_append(users, g_strdup(cid.toString().c_str()));
-        flags = g_list_append(flags, GINT_TO_POINTER( cid == owner() ? PURPLE_CBFLAGS_FOUNDER : PURPLE_CBFLAGS_NONE ));
+        if (purple_conv_chat_find_user(conv, cid.toString().c_str())) {
+            users = g_list_append(users, g_strdup(cid.toString().c_str()));
+            flags = g_list_append(flags, GINT_TO_POINTER( cid == owner() ? PURPLE_CBFLAGS_FOUNDER : PURPLE_CBFLAGS_NONE ));
+        } else {
+            new_users = g_list_append(new_users, g_strdup(cid.toString().c_str()));
+            new_flags = g_list_append(new_flags, GINT_TO_POINTER( cid == owner() ? PURPLE_CBFLAGS_FOUNDER : PURPLE_CBFLAGS_NONE ));
+        }
+
     }
     purple_conv_chat_clear_users(conv);
     purple_conv_chat_add_users(conv, users, NULL, flags, false);
+    purple_conv_chat_add_users(conv, new_users, NULL, new_flags, true);
 
     g_list_free_full(users, &g_free);
     g_list_free(flags);
+    g_list_free_full(new_users, &g_free);
+    g_list_free(new_flags);
 }
 
 PurpleChat* ThreeplGroup::find_blist_chat(PurpleAccount *account) const {

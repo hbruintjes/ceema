@@ -119,7 +119,6 @@ void threepl_chat_invite(PurpleConnection* gc, int id, const char* message, cons
         return;
     }
 
-    //TODO: check if not already there, do not add twice
     ceema::client_id client;
     try {
         client = ceema::client_id::fromString(who);
@@ -129,10 +128,6 @@ void threepl_chat_invite(PurpleConnection* gc, int id, const char* message, cons
     }
     if (group_data->add_member(client)) {
         // Added new member, put in group
-        // TODO: protocol message packet for sync
-        auto chat = purple_conversation_get_chat_data(conv);
-        purple_conv_chat_add_user(chat, who, NULL, PURPLE_CBFLAGS_NONE, FALSE);
-
         ceema::PayloadGroupMembers payloadMembers;
         payloadMembers.group = group_data->gid();
         payloadMembers.members = group_data->members();
@@ -147,7 +142,7 @@ void threepl_chat_invite(PurpleConnection* gc, int id, const char* message, cons
     }
 }
 
-int threepl_chat_send(PurpleConnection* gc, int id, const char* message, PurpleMessageFlags) {
+int threepl_chat_send(PurpleConnection* gc, int id, const char* message, PurpleMessageFlags flags) {
     ThreeplConnection* connection = static_cast<ThreeplConnection*>(purple_connection_get_protocol_data(gc));
 
     PurpleConversation* conv = purple_find_chat(gc, id);
@@ -167,10 +162,11 @@ int threepl_chat_send(PurpleConnection* gc, int id, const char* message, PurpleM
         return -ENOTCONN;
     }
     for(auto& msg_fut: msg_fut_vec) {
-        msg_fut.next([connection, msg = std::basic_string<char>(message)](
+        msg_fut.next([connection, id, msg = std::string(message), flags](
                 ceema::future<std::unique_ptr<ceema::Message>> fut) {
             try {
-                fut.get();
+                std::unique_ptr<ceema::Message> m = fut.get();
+                serv_got_chat_in(connection->connection(), id, m->sender().toString().c_str(), flags, msg.c_str(), m->time());
             } catch (message_exception &e) {
                 const char* who = e.id().toString().c_str();
                 gchar *errMsg = g_strdup_printf("Unable to send message to %s: %s", who, e.what());
