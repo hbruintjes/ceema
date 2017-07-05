@@ -184,20 +184,21 @@ int threepl_chat_send(PurpleConnection* gc, int id, const char* message, PurpleM
 }
 
 void threepl_set_chat_topic(PurpleConnection *gc, int id, const char *topic) {
-    //TODO: protocol stuff
     ThreeplConnection* connection = static_cast<ThreeplConnection*>(purple_connection_get_protocol_data(gc));
 
-    PurpleConversation* conv = purple_find_chat(gc, id);
     ThreeplGroup* group_data = connection->group_store().find_group(id);
-    if (!conv || !group_data) {
+    if (!group_data) {
         purple_notify_error(gc, "Error", "Unable to set topic", "The group does not exist");
         return;
     }
 
-    group_data->set_name(topic);
-
-    bool proto_OK = false;
-    if (proto_OK) {
-        purple_conv_chat_set_topic(PURPLE_CONV_CHAT(conv), "", group_data->name().c_str());
+    if (group_data->owner() == connection->account().id()) {
+        group_data->set_name(topic);
+        connection->group_store().update_chat(connection->acct(), *group_data);
+        ceema::PayloadGroupTitle payload;
+        payload.group = group_data->gid();
+        payload.title = topic;
+        connection->send_group_message(group_data, payload);
     }
+
 }
