@@ -161,22 +161,41 @@ int threepl_chat_send(PurpleConnection* gc, int id, const char* message, PurpleM
     if (msg_fut_vec.empty()) {
         return -ENOTCONN;
     }
+    bool first = true;
     for(auto& msg_fut: msg_fut_vec) {
-        msg_fut.next([connection, id, msg = std::string(message), flags](
-                ceema::future<std::unique_ptr<ceema::Message>> fut) {
-            try {
-                std::unique_ptr<ceema::Message> m = fut.get();
-                serv_got_chat_in(connection->connection(), id, m->sender().toString().c_str(), flags, msg.c_str(), m->time());
-            } catch (message_exception &e) {
-                const char* who = e.id().toString().c_str();
-                gchar *errMsg = g_strdup_printf("Unable to send message to %s: %s", who, e.what());
-                if (!purple_conv_present_error(who, connection->acct(), errMsg)) {
-                    purple_notify_error(connection->connection(), "Error sending message", "Unable to send message", errMsg);
+        if (first) {
+            first = false;
+            msg_fut.next([connection, id, msg = std::string(message), flags](
+                    ceema::future<std::unique_ptr<ceema::Message>> fut) {
+                try {
+                    std::unique_ptr<ceema::Message> m = fut.get();
+                    serv_got_chat_in(connection->connection(), id, m->sender().toString().c_str(), flags, msg.c_str(), m->time());
+                } catch (message_exception &e) {
+                    const char* who = e.id().toString().c_str();
+                    gchar *errMsg = g_strdup_printf("Unable to send message to %s: %s", who, e.what());
+                    if (!purple_conv_present_error(who, connection->acct(), errMsg)) {
+                        purple_notify_error(connection->connection(), "Error sending message", "Unable to send message", errMsg);
+                    }
+                    g_free(errMsg);
                 }
-                g_free(errMsg);
-            }
 
-        });
+            });
+        } else {
+            msg_fut.next([connection](ceema::future<std::unique_ptr<ceema::Message>> fut) {
+                try {
+                    std::unique_ptr<ceema::Message> m = fut.get();
+                } catch (message_exception &e) {
+                    std::string who = e.id().toString();
+                    gchar *errMsg = g_strdup_printf("Unable to send message to %s: %s", who.c_str(), e.what());
+                    if (!purple_conv_present_error(who.c_str(), connection->acct(), errMsg)) {
+                        purple_notify_error(connection->connection(), "Error sending message", "Unable to send message",
+                                            errMsg);
+                    }
+                    g_free(errMsg);
+                }
+
+            });
+        }
     }
 
     // Echo the message regardless of error (some clients may succeed while others fail)
