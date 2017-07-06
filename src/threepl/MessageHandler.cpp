@@ -290,7 +290,7 @@ void ThreeplMessageHandler::recv(ceema::Message& msg) {
             break;
     }
 
-    if (ack) {
+    if (ack && !msg.flags().isset(ceema::MessageFlag::GROUP)) {
         bool mark_seen = purple_account_get_bool(m_connection.acct(), "status-seen", false) != 0;
 
         ceema::PayloadMessageStatus payloadStatus;
