@@ -61,6 +61,26 @@ PurpleCmdRet threepl_command_disagree(PurpleConversation * conv, const gchar *,
     return threepl_message_agree(conv, false);
 }
 
+PurpleCmdRet threepl_command_sync(PurpleConversation * conv, const gchar *,
+                                   gchar **, gchar **, void *) {
+    PurpleAccount* acct = purple_conversation_get_account(conv);
+    PurpleConnection* gc = purple_account_get_connection(acct);
+    ThreeplConnection* connection = static_cast<ThreeplConnection*>(purple_connection_get_protocol_data(gc));
+
+    PurpleConvChat* conv_chat = PURPLE_CONV_CHAT(conv);
+    int id = purple_conv_chat_get_id(conv_chat);
+    ThreeplGroup* group_data = connection->group_store().find_group(id);
+    if (group_data && group_data->owner() != connection->account().id()) {
+        ceema::PayloadGroupSync payload;
+        payload.group = group_data->gid();
+        connection->send_message(group_data->owner(), payload);
+    } else{
+        return PURPLE_CMD_RET_FAILED;
+    }
+
+    return PURPLE_CMD_RET_OK;
+}
+
 void threepl_register_commands(PurplePlugin*) {
     if (!commands.empty()) {
         return;
@@ -75,6 +95,12 @@ void threepl_register_commands(PurplePlugin*) {
                              static_cast<PurpleCmdFlag>(PURPLE_CMD_FLAG_IM ),
                              "prpl-threepl", threepl_command_agree,
                              "agree:  Agree with last message received.", nullptr);
+    commands.emplace_back(id);
+
+    id = purple_cmd_register("sync", "", PURPLE_CMD_P_PRPL,
+                             static_cast<PurpleCmdFlag>(PURPLE_CMD_FLAG_CHAT ),
+                             "prpl-threepl", threepl_command_sync,
+                             "sync:  Request group sync.", nullptr);
     commands.emplace_back(id);
 }
 
