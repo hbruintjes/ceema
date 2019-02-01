@@ -38,7 +38,7 @@ add_library(ceema SHARED
         contact/Account.h contact/Account.cpp contact/backup.h contact/backup.cpp contact/Contact.h contact/Contact.cpp
 
         encoding/base32.h encoding/base64.h encoding/crypto.h encoding/crypto.cpp encoding/hex.h
-        encoding/pkcs7.h encoding/sha256.h encoding/sha256.cpp
+        encoding/pkcs7.h encoding/sha256.h encoding/sha256.cpp encoding/pbkdf2-sha256.h encoding/pbkdf2-sha256.c
 
         include/config.h
 

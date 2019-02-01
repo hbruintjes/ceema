@@ -18,7 +18,7 @@
 
 #include <encoding/base32.h>
 #include <encoding/sha256.h>
-#include <openssl/evp.h>
+#include <encoding/pbkdf2-sha256.h>
 #include <logging/logging.h>
 
 namespace ceema {
@@ -39,12 +39,8 @@ namespace ceema {
 
         // pbkdf2+HMAC hash the password, salt with client ID. Result is encryption key
         byte_array<crypto_stream_KEYBYTES> enckey;
-        const EVP_MD* evp_sha256 = EVP_sha256();
-        int res = PKCS5_PBKDF2_HMAC(password.data(), password.size(), data.data(), SALT_LEN, PBKDF_ITER, evp_sha256,
-                                    enckey.size(), enckey.data());
-        if (res == 0) {
-            throw std::runtime_error("Unable to hash password");
-        }
+        PBKDF2_SHA256(reinterpret_cast<const uint8_t*>(password.data()), password.size(),
+                data.data(), SALT_LEN, PBKDF_ITER, enckey.data(), enckey.size());
 
         /* Encrypt backup with derived key and zero nonce */
         byte_array<crypto_stream_NONCEBYTES> nonce{};
@@ -74,12 +70,8 @@ namespace ceema {
         // pbkdf2+HMAC hash the password, salt with client ID. Result is encryption key
         //TODO: when there is platform support, switch to libsodium implementation
         byte_array<crypto_stream_KEYBYTES> enckey;
-        const EVP_MD* evp_sha256 = EVP_sha256();
-        int res = PKCS5_PBKDF2_HMAC(password.data(), password.size(), salt.data(), salt.size(), PBKDF_ITER, evp_sha256,
-                                    enckey.size(), enckey.data());
-        if (res == 0) {
-            throw std::runtime_error("Unable to hash password");
-        }
+        PBKDF2_SHA256(reinterpret_cast<const uint8_t*>(password.data()), password.size(),
+                      salt.data(), salt.size(), PBKDF_ITER, enckey.data(), enckey.size());
 
         /* Decrypt backup with derived key and zero nonce */
         byte_array<crypto_stream_NONCEBYTES> nonce{0};
