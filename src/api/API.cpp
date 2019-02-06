@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <openssl/x509.h>
 #include "API.h"
 
 #include "logging/logging.h"
@@ -22,9 +21,7 @@
 namespace ceema {
 
     API::API(HttpManager& manager) : m_manager(manager) {
-        X509* cert = HttpClient::parseCert(api_cert, strlen(api_cert));
-        m_manager.set_cert(cert);
-        X509_free(cert);
+        m_manager.set_cert(api_cert);
     }
 
     future<byte_vector> API::get(std::string const &url) {

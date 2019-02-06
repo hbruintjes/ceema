@@ -29,9 +29,21 @@ configure_file(
     ${CMAKE_SOURCE_DIR}/src/include/config.h
 )
 
+if (USE_OPENSSL)
+    list(APPEND SSL_SOURCES api/HttpClientOpenSSL.cpp)
+endif ()
+
+if (USE_WOLFSSL)
+    list(APPEND SSL_SOURCES api/HttpClientwolfSSL.cpp)
+endif ()
+
+if (USE_MBEDTLS)
+    list(APPEND SSL_SOURCES api/HttpClientmbedTLS.cpp)
+endif ()
+
 add_library(ceema SHARED
         api/API.h api/API.cpp api/BlobAPI.h api/BlobAPI.cpp api/HttpClient.h api/HttpClient.cpp api/IdentAPI.h api/IdentAPI.cpp
-        api/HttpManager.cpp api/HttpManager.h
+        api/HttpManager.cpp api/HttpManager.h ${SSL_SOURCES}
 
         async/future.h
 
@@ -71,7 +83,7 @@ set_target_properties(ceema PROPERTIES
 
 target_link_libraries(ceema
     ${CURL_LIBRARIES}
-    ${OPENSSL_LIBRARIES}
+    ${SSL_LIBS}
     ${sodium_LIBRARIES}
     mpark_variant
     )

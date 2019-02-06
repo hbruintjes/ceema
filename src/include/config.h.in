@@ -18,4 +18,8 @@
 
 #cmakedefine IPV6
 
+#cmakedefine USE_OPENSSL
+#cmakedefine USE_MBEDTLS
+#cmakedefine USE_WOLFSSL
+
 #cmakedefine PLATFORM_BIG_ENDIAN

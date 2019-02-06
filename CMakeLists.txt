@@ -75,7 +75,52 @@ endforeach()
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for built executables")
 
 find_package(CURL QUIET REQUIRED)
-find_package(OpenSSL QUIET REQUIRED)
+# Find any of OpenSSL, mbedTLS or CyaSSL, as these are currently supported for
+# CURL certificate callbacks
+option(USE_OPENSSL "Add OpenSSL support" ON)
+option(USE_MBEDTLS "Add mbedTLS/PolarSSL support" OFF)
+option(USE_WOLFSSL "Add wolfSSL/cyaSSL support" OFF)
+
+if (NOT USE_OPENSSL AND NOT USE_MBEDTLS AND NOT USE_WOLFSSL)
+    message(SEND_ERROR "At least one SSL library is required")
+endif ()
+
+if (USE_OPENSSL)
+    find_package(OpenSSL REQUIRED QUIET)
+    list(APPEND SSL_LIBS OpenSSL::SSL OpenSSL::Crypto)
+endif()
+
+if (USE_MBEDTLS)
+    find_library(mbedTLS_LIBRARY NAMES mbedtls)
+    find_path(mbedTLS_INCLUDE_DIR NAMES mbedtls/version.h)
+    if (mbedTLS_LIBRARY AND mbedTLS_INCLUDE_DIR)
+        add_library(mbedTLS UNKNOWN IMPORTED)
+        set_target_properties(mbedTLS PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${mbedTLS_INCLUDE_DIR}"
+            IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+            IMPORTED_LOCATION "${mbedTLS_LIBRARY}")
+        list(APPEND SSL_LIBS mbedTLS)
+    else ()
+        message(SEND_ERROR "mbedTLS not found")
+    endif ()
+endif ()
+
+if (USE_WOLFSSL)
+    find_library(wolfSSL_LIBRARY NAMES wolfssl)
+    find_path(wolfSSL_INCLUDE_DIR NAMES wolfssl/version.h)
+    if (wolfSSL_LIBRARY AND wolfSSL_INCLUDE_DIR)
+        set(USE_WOLFSSL 1)
+        add_library(wolfSSL UNKNOWN IMPORTED)
+        set_target_properties(wolfSSL PROPERTIES
+                INTERFACE_INCLUDE_DIRECTORIES "${wolfSSL_INCLUDE_DIR}"
+                IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+                IMPORTED_LOCATION "${wolfSSL_LIBRARY}")
+        list(APPEND SSL_LIBS wolfSSL)
+    else ()
+        message(SEND_ERROR "wolfSSL not found")
+    endif()
+endif()
+
 find_package(sodium QUIET REQUIRED)
 #find_package(JsonCpp QUIET REQUIRED)
 add_subdirectory(3rdparty/variant)

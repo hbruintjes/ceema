@@ -24,9 +24,8 @@
 #include <logging/logging.h>
 #include <json.hpp>
 
+#include <config.h>
 #include <async/future.h>
-
-typedef struct x509_st X509;
 
 using json = nlohmann::json;
 
@@ -205,7 +204,7 @@ namespace ceema {
     class HttpClient {
         CURL * m_curl;
         std::array<char, CURL_ERROR_SIZE> m_errbuf;
-        X509* m_cert;
+        std::string m_cert;
         CURLcode m_lastRes;
 
         std::string m_userAgent;
@@ -221,7 +220,7 @@ namespace ceema {
         // Allows to perform cleanup of CURL resources when done
         promise<void> m_currentTask;
     public:
-        HttpClient(HttpManager& manager, std::string const& user_agent) : m_curl(NULL), m_errbuf{}, m_cert(NULL), m_lastRes(CURLE_OK),
+        HttpClient(HttpManager& manager, std::string const& user_agent) : m_curl(NULL), m_errbuf{}, m_lastRes(CURLE_OK),
                                                                           m_userAgent(user_agent), m_transfer(nullptr),
                                                                           m_busy(false), m_manager(manager) {
             init();
@@ -237,7 +236,9 @@ namespace ceema {
             return m_busy;
         }
 
-        void set_cert(X509* cert);
+        void set_cert(std::string const& cert) {
+            m_cert = cert;
+        }
 
         /**
          * GET url
@@ -273,13 +274,6 @@ namespace ceema {
             return err;
         }
 
-        /**
-         * Parse PEM encoded certificate.
-         * @param data PEM encoded certificate
-         * @return X509 structure, or NULL on error
-         */
-        static X509* parseCert(const char* cert_data, size_t len);
-
         future<void> startTask(IHttpTransfer* transfer);
         void completeTask(CURLcode resultCode);
 
@@ -308,6 +302,7 @@ namespace ceema {
 
         static int progress_callback(void *client_ptr, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
 
+#ifdef USE_OPENSSL
         /**
          * SSL context setup callback
          * @param curl CURL instance
@@ -315,7 +310,30 @@ namespace ceema {
          * @param cert_data Pointer to PEM encoded certificate string data
          * @return CURLE_OK on success, some error otherwise
          */
-        static CURLcode ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *client_ptr);
+        static CURLcode ssl_ctx_callback_openssl(CURL *curl, void *ssl_ctx, void *client_ptr);
+#endif
+
+#ifdef USE_MBEDTLS
+        /**
+         * SSL context setup callback
+         * @param curl CURL instance
+         * @param ssl_ctx SSL_CTX
+         * @param cert_data Pointer to PEM encoded certificate string data
+         * @return CURLE_OK on success, some error otherwise
+         */
+        static CURLcode ssl_ctx_callback_mbedtls(CURL *curl, void *ssl_ctx, void *client_ptr);
+#endif
+
+#ifdef USE_WOLFSSL
+        /**
+         * SSL context setup callback
+         * @param curl CURL instance
+         * @param ssl_ctx SSL_CTX
+         * @param cert_data Pointer to PEM encoded certificate string data
+         * @return CURLE_OK on success, some error otherwise
+         */
+        static CURLcode ssl_ctx_callback_wolfssl(CURL *curl, void *ssl_ctx, void *client_ptr);
+#endif
     };
 
     inline bool operator==(HttpClient const& a, HttpClient const& b) {

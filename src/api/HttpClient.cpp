@@ -19,19 +19,13 @@
 #include "HttpManager.h"
 
 
-#include <openssl/ossl_typ.h>
-#include <openssl/pem.h>
-#include <openssl/ssl.h>
-#include <openssl/x509.h>
+
 #include <curl/multi.h>
 
 namespace ceema {
 
     HttpClient::~HttpClient() {
         close();
-        if (m_cert) {
-            X509_free(m_cert);
-        }
     }
 
     future<byte_vector> HttpClient::get(std::string const& url) {
@@ -166,23 +160,6 @@ namespace ceema {
         m_busy = false;
     }
 
-    void HttpClient::set_cert(X509* cert) {
-        if (m_cert) {
-            X509_free(m_cert);
-        }
-        m_cert = X509_dup(cert);
-    }
-
-    X509* HttpClient::parseCert(const char* cert_data, size_t len) {
-        BIO* bio = BIO_new_mem_buf(cert_data, len);
-        if (bio == NULL) {
-            throw std::runtime_error("Unable to allocate BIO");
-        }
-        X509* cert = PEM_read_bio_X509(bio, NULL, 0, NULL);
-        BIO_free(bio);
-        return cert;
-    }
-
     void HttpClient::init() {
         if (m_curl) {
             return;
@@ -228,8 +205,35 @@ namespace ceema {
             throw std::runtime_error(curl_easy_strerror(res));
         }
 
-        if ((res = curl_easy_setopt(m_curl, CURLOPT_SSL_CTX_FUNCTION, &HttpClient::ssl_ctx_callback)) != CURLE_OK) {
+        struct curl_tlssessioninfo *tls_info;
+        if ((res = curl_easy_getinfo(m_curl, CURLINFO_TLS_SSL_PTR, &tls_info)) != CURLE_OK) {
             throw std::runtime_error(curl_easy_strerror(res));
+        }
+
+        switch(tls_info->backend) {
+#ifdef USE_OPENSSL
+            case CURLSSLBACKEND_OPENSSL:
+                if ((res = curl_easy_setopt(m_curl, CURLOPT_SSL_CTX_FUNCTION, &HttpClient::ssl_ctx_callback_openssl)) != CURLE_OK) {
+                    throw std::runtime_error(curl_easy_strerror(res));
+                }
+                break;
+#endif
+#ifdef USE_WOLFSSL
+            case CURLSSLBACKEND_CYASSL:
+                if ((res = curl_easy_setopt(m_curl, CURLOPT_SSL_CTX_FUNCTION, &HttpClient::ssl_ctx_callback_wolfssl)) != CURLE_OK) {
+                    throw std::runtime_error(curl_easy_strerror(res));
+                }
+                break;
+#endif
+#ifdef USE_MBEDTLS
+            case CURLSSLBACKEND_MBEDTLS:
+                if ((res = curl_easy_setopt(m_curl, CURLOPT_SSL_CTX_FUNCTION, &HttpClient::ssl_ctx_callback_mbedtls)) != CURLE_OK) {
+                    throw std::runtime_error(curl_easy_strerror(res));
+                }
+                break;
+#endif
+            default:
+                throw std::runtime_error("Unsupported TLS library used by CURL");
         }
 
         if ((res = curl_easy_setopt(m_curl, CURLOPT_SSL_CTX_DATA, this)) != CURLE_OK) {
@@ -284,19 +288,6 @@ namespace ceema {
         }
     }
 
-    CURLcode HttpClient::ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *client_ptr) {
-        HttpClient& client = *static_cast<HttpClient*>(client_ptr);
 
-        LOG_DEBUG(logging::loggerRoot, "Inserting SSL cert");
-        CURLcode status = CURLE_OK;
-
-        X509_STORE* store = SSL_CTX_get_cert_store(static_cast<SSL_CTX*>(ssl_ctx));
-        if (!X509_STORE_add_cert(store, client.m_cert)) {
-            // Error adding cert
-            status = CURLE_SSL_CERTPROBLEM;
-        }
-
-        return status;
-    }
 
 }

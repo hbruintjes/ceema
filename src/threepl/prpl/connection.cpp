@@ -36,8 +36,8 @@ void threepl_login(PurpleAccount *account) {
         purple_connection_set_protocol_data(gc, connection);
         connection->start_connect();
     } catch (std::exception& e) {
-        purple_notify_error(gc, "Login error", "Invalid username or password",
-                            "Unable to decrypt the backup string, please check account settings.");
+        purple_notify_error(gc, "Login error", e.what(),
+                "Invalid username, password or backup string");
         return;
     }
 }

@@ -18,7 +18,7 @@
 #include <openssl/x509.h>
 
 namespace ceema {
-    HttpManager::HttpManager() : m_cert(NULL), m_running_handles(0) {
+    HttpManager::HttpManager() : m_cert(), m_running_handles(0) {
         m_handle = curl_multi_init();
 
         curl_multi_setopt(m_handle, CURLMOPT_SOCKETFUNCTION, &socket_callback);
@@ -35,17 +35,6 @@ namespace ceema {
         m_clients.clear();
 
         curl_multi_cleanup(m_handle);
-
-        if (m_cert) {
-            X509_free(m_cert);
-        }
-    }
-
-    void HttpManager::set_cert(X509* cert) {
-        if (m_cert) {
-            X509_free(m_cert);
-        }
-        m_cert = X509_dup(cert);
     }
 
     HttpClient& HttpManager::getFreeClient() {

@@ -28,7 +28,7 @@ namespace ceema {
     class HttpManager {
     protected:
         CURLM* m_handle;
-        X509* m_cert;
+        std::string m_cert;
 
         std::unordered_set<HttpClient> m_clients;
         int m_running_handles;
@@ -43,7 +43,9 @@ namespace ceema {
 
         virtual void registerTimeout(long timeout_ms) = 0;
 
-        void set_cert(X509* cert);
+        void set_cert(std::string cert) {
+            m_cert = cert;
+        }
 
         HttpClient& getFreeClient();
 
