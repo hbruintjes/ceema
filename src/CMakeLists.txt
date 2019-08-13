@@ -12,6 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# A self compiled CURL lib has to be installed in /3rdparty/curl, which
+# is contained in .gitignore and is not trakced by git
+if (USE_OWN_CURL_LIB)
+    set (CURL_INCLUDE_DIRS  "${CMAKE_SOURCE_DIR}/3rdparty/curl")
+    set (CURL_LIBRARIES     "${CMAKE_SOURCE_DIR}/3rdparty/curl/lib/libcurl.so")
+endif ()
+
 # Include directories
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/include/

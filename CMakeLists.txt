@@ -85,6 +85,12 @@ if (NOT USE_OPENSSL AND NOT USE_MBEDTLS AND NOT USE_WOLFSSL)
     message(SEND_ERROR "At least one SSL library is required")
 endif ()
 
+# Give the user the possibility to provide the path to a possibly self compiled
+# CURL lib. Some linux distros have CURL with GnuTLS backend which does not
+# provide the required CURL certificate callback. Thus CURL has to be manually
+# compiled with another backend, like, e.g., mbedTLS
+option(USE_OWN_CURL_LIB "Use manually compiled CURL lib" ON)
+
 if (USE_OPENSSL)
     find_package(OpenSSL REQUIRED QUIET)
     list(APPEND SSL_LIBS OpenSSL::SSL OpenSSL::Crypto)
