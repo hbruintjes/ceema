@@ -18,8 +18,8 @@
 
 #define IPV6
 
-#define USE_OPENSSL
-/* #undef USE_MBEDTLS */
+/* #undef USE_OPENSSL */
+#define USE_MBEDTLS
 /* #undef USE_WOLFSSL */
 
 /* #undef PLATFORM_BIG_ENDIAN */

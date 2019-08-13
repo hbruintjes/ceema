@@ -77,8 +77,8 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for b
 find_package(CURL QUIET REQUIRED)
 # Find any of OpenSSL, mbedTLS or CyaSSL, as these are currently supported for
 # CURL certificate callbacks
-option(USE_OPENSSL "Add OpenSSL support" ON)
-option(USE_MBEDTLS "Add mbedTLS/PolarSSL support" OFF)
+option(USE_OPENSSL "Add OpenSSL support" OFF)
+option(USE_MBEDTLS "Add mbedTLS/PolarSSL support" ON)
 option(USE_WOLFSSL "Add wolfSSL/cyaSSL support" OFF)
 
 if (NOT USE_OPENSSL AND NOT USE_MBEDTLS AND NOT USE_WOLFSSL)
