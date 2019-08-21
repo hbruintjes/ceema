@@ -9,6 +9,7 @@
 //#include <libpurple/purple.h>
 #include <contact/backup.h>
 #include <libpurple/request.h>
+#include <libpurple/debug.h>
 
 struct phone_cb_data {
     ThreeplConnection* connection;
@@ -187,6 +188,27 @@ static void threepl_generate_backup(PurplePluginAction* action) {
                          connection->acct(), NULL, NULL, connection);
 }
 
+static void threepl_import_backup_cb(ThreeplConnection* connection, const char* backup_file) {
+    try {
+        //std::string backup = ceema::make_backup(connection->account(), password);
+purple_debug_info ("TPL", "Import from %s\n", backup_file);
+        std::string import = "0";
+        purple_notify_info(connection->connection(), "Contacts and groups imported", "Number of items imported is displayed below", import.c_str());
+    } catch(std::exception& e) {
+        purple_notify_error(connection->connection(), "Failed to generate backup string", "Unable to import data from backup", e.what());
+    }
+}
+
+static void threepl_import_backup(PurplePluginAction* action) {
+    PurpleConnection* gc = static_cast<PurpleConnection*>(action->context);
+    ThreeplConnection* connection = static_cast<ThreeplConnection*>(purple_connection_get_protocol_data(gc));
+
+    purple_request_file(gc, ("Backup file (zip-archive) to import from"),
+                         ("Contacts and groups will be imported into the buddy list."),
+                         FALSE, PURPLE_CALLBACK(threepl_import_backup_cb), NULL,
+                         connection->acct(), NULL, NULL, connection);
+}
+
 GList* threepl_actions(PurplePlugin *plugin, gpointer context) {
     PurplePluginAction *act = purple_plugin_action_new(("Set Nickname..."), &threepl_set_nickname);
     GList* acts = g_list_append(NULL, act);
@@ -195,6 +217,8 @@ GList* threepl_actions(PurplePlugin *plugin, gpointer context) {
     act = purple_plugin_action_new(("Link phone number..."), &threepl_set_phone);
     acts = g_list_append(acts, act);
     act = purple_plugin_action_new(("Set revocation key..."), &threepl_set_revocation);
+    acts = g_list_append(acts, act);
+    act = purple_plugin_action_new(("Import from backup..."), &threepl_import_backup);
     acts = g_list_append(acts, act);
     act = purple_plugin_action_new(("Generate backup string..."), &threepl_generate_backup);
     return g_list_append(acts, act);
