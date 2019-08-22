@@ -205,6 +205,9 @@ static void threepl_import_backup_doit(threepl_actions_data* data, const char* b
 
         zip_set_default_password (bak, data->text);
 
+        zip_int64_t num = zip_get_num_entries (bak, ZIP_FL_UNCHANGED);
+purple_debug_info ("TPL","number of entries in archive: %d\n", num);
+
         zip_file_t* contacts = zip_fopen (bak, "contacts.csv", ZIP_FL_UNCHANGED);
 
         if (! contacts) {
@@ -214,10 +217,42 @@ static void threepl_import_backup_doit(threepl_actions_data* data, const char* b
           return;
         }
 
+        enum states {
+          NEW_LINE = 0,
+          PARSE_ID = 1
+        };
+
+        // parse the file for ID and name
+        std::string id ("");
+        int state = 0;
+        char c;
+        zip_int64_t read = zip_fread (contacts, &c, 1);
+
+        while (read > 0) {
+          read = zip_fread (contacts, &c, 1);
+       
+          switch (c) {
+       
+            case ('"'):
+              state++;
+       
+            case ('\n'):
+              state = NEW_LINE;
+       
+            default:
+                switch (state) {
+                  case PARSE_ID:
+                    id += c;
+                    break;
+                }
+          
+          }
+        }
+
         zip_fclose (contacts);
 
         std::string import = "0";
-        purple_notify_info(data->connection->connection(), "Contacts and groups imported", "Number of items imported is displayed below", import.c_str());
+        purple_notify_info(data->connection->connection(), "Contacts and groups imported", "Number of items imported is displayed below", id.c_str());
 
         zip_close (bak);
     } 
