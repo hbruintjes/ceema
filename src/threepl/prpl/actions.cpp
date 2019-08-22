@@ -2,14 +2,16 @@
 // Created by harold on 18-3-17.
 //
 
-#include "actions.h"
 #include "threepl/ThreeplConnection.h"
-
 #include <libpurple/connection.h>
+#include "actions.h"
+
 //#include <libpurple/purple.h>
 #include <contact/backup.h>
 #include <libpurple/request.h>
 #include <libpurple/debug.h>
+
+#include <zip.h>
 
 struct phone_cb_data {
     ThreeplConnection* connection;
@@ -188,25 +190,71 @@ static void threepl_generate_backup(PurplePluginAction* action) {
                          connection->acct(), NULL, NULL, connection);
 }
 
-static void threepl_import_backup_cb(ThreeplConnection* connection, const char* backup_file) {
+// Callback for import backup action - password/file is read - do the import
+static void threepl_import_backup_doit(threepl_actions_data* data, const char* backup_file) {
     try {
-        //std::string backup = ceema::make_backup(connection->account(), password);
-purple_debug_info ("TPL", "Import from %s\n", backup_file);
+        int err = 0;
+        zip_t* bak = zip_open(backup_file, ZIP_RDONLY, &err);
+
+        if (err) {
+          purple_notify_info(data->connection->connection(),
+            "Error imorting contacts and groups", "Could not open file", backup_file);
+          delete data;
+          return;
+        }
+
+        zip_set_default_password (bak, data->text);
+
+        zip_file_t* contacts = zip_fopen (bak, "contacts.csv", ZIP_FL_UNCHANGED);
+
+        if (! contacts) {
+          purple_notify_info(data->connection->connection(),
+            "Error imorting contacts and groups", "Could not read contacts from file", backup_file);
+          delete data;
+          return;
+        }
+
+        zip_fclose (contacts);
+
         std::string import = "0";
-        purple_notify_info(connection->connection(), "Contacts and groups imported", "Number of items imported is displayed below", import.c_str());
-    } catch(std::exception& e) {
-        purple_notify_error(connection->connection(), "Failed to generate backup string", "Unable to import data from backup", e.what());
+        purple_notify_info(data->connection->connection(), "Contacts and groups imported", "Number of items imported is displayed below", import.c_str());
+
+        zip_close (bak);
+    } 
+    catch(std::exception& e) {
+        purple_notify_error(data->connection->connection(), "Failed to generate backup string", "Unable to import data from backup", e.what());
     }
+
+    delete data;
 }
 
+// Callback for import backup action - password is read - get name of archive file next
+static void threepl_import_backup_file (threepl_actions_data* data, const char* password) {
+
+    strcpy (data->text, password);
+
+    purple_request_file(data->gc, ("Backup file (zip-archive) to import from"),
+                         ("Contacts and groups will be imported into the buddy list."),
+                         FALSE, PURPLE_CALLBACK(threepl_import_backup_doit), NULL,
+                         data->connection->acct(), NULL, NULL, data);
+}
+
+// Callback for import backup action
 static void threepl_import_backup(PurplePluginAction* action) {
+
     PurpleConnection* gc = static_cast<PurpleConnection*>(action->context);
     ThreeplConnection* connection = static_cast<ThreeplConnection*>(purple_connection_get_protocol_data(gc));
 
-    purple_request_file(gc, ("Backup file (zip-archive) to import from"),
-                         ("Contacts and groups will be imported into the buddy list."),
-                         FALSE, PURPLE_CALLBACK(threepl_import_backup_cb), NULL,
-                         connection->acct(), NULL, NULL, connection);
+    // initialize user data
+    threepl_actions_data* data = new threepl_actions_data ();
+    data->gc = gc;
+    data->connection = connection;
+
+    // ask user for the password of the zip-archive
+    purple_request_input(gc, ("Backup Password"), ("Enter the password of the backup archive."),
+                         ("The password is required for decrypting the archive."),
+                         NULL, FALSE, TRUE, NULL, ("OK"), PURPLE_CALLBACK(threepl_import_backup_file), ("Cancel"), NULL,
+                         connection->acct(), NULL, NULL, data);
 }
 
 GList* threepl_actions(PurplePlugin *plugin, gpointer context) {

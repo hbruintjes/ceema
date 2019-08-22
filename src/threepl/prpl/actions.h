@@ -9,4 +9,11 @@
 
 GList* threepl_actions(PurplePlugin *plugin, gpointer context);
 
+// typedef required for more complex actions like import from backup
+typedef struct {
+  PurpleConnection*  gc;
+  ThreeplConnection* connection;
+  char               text[128];
+} threepl_actions_data;
+
 #endif //CEEMA_ACTIONS_H
