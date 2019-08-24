@@ -3,6 +3,7 @@
 //
 
 #include "threepl/ThreeplConnection.h"
+#include "threepl/ThreeplImport.h"
 #include <libpurple/connection.h>
 #include "actions.h"
 
@@ -191,70 +192,26 @@ static void threepl_generate_backup(PurplePluginAction* action) {
 }
 
 // Callback for import backup action - password/file is read - do the import
-static void threepl_import_backup_doit(threepl_actions_data* data, const char* backup_file) {
+static void threepl_import_backup_doit(threepl_actions_data* data, char* password) {
     try {
-        int err = 0;
-        zip_t* bak = zip_open(backup_file, ZIP_RDONLY, &err);
+        ThreeplImport importer (data->gc, password, data->text);
+        ThreeplImport::imported num = importer.import_contacts ();
 
-        if (err) {
-          purple_notify_info(data->connection->connection(),
-            "Error imorting contacts and groups", "Could not open file", backup_file);
-          delete data;
-          return;
+        if (num.b_new == -1) {
+          purple_notify_error (data->connection->connection(),
+                               "Failed to import from backup",
+                               "Unable to read the backup file",
+                              data->text);
+        } else {
+          std::string result = std::to_string (num.b_new)
+                           + " new contacts imported, "
+                           + std::to_string (num.b_old)
+                           + " already exisiting";
+          purple_notify_info (data->connection->connection(), 
+                              "Contacts and groups imported",
+                              "Successfully read data from backup file",
+                              result.c_str ());
         }
-
-        zip_set_default_password (bak, data->text);
-
-        zip_int64_t num = zip_get_num_entries (bak, ZIP_FL_UNCHANGED);
-purple_debug_info ("TPL","number of entries in archive: %d\n", num);
-
-        zip_file_t* contacts = zip_fopen (bak, "contacts.csv", ZIP_FL_UNCHANGED);
-
-        if (! contacts) {
-          purple_notify_info(data->connection->connection(),
-            "Error imorting contacts and groups", "Could not read contacts from file", backup_file);
-          delete data;
-          return;
-        }
-
-        enum states {
-          NEW_LINE = 0,
-          PARSE_ID = 1
-        };
-
-        // parse the file for ID and name
-        std::string id ("");
-        int state = 0;
-        char c;
-        zip_int64_t read = zip_fread (contacts, &c, 1);
-
-        while (read > 0) {
-          read = zip_fread (contacts, &c, 1);
-       
-          switch (c) {
-       
-            case ('"'):
-              state++;
-       
-            case ('\n'):
-              state = NEW_LINE;
-       
-            default:
-                switch (state) {
-                  case PARSE_ID:
-                    id += c;
-                    break;
-                }
-          
-          }
-        }
-
-        zip_fclose (contacts);
-
-        std::string import = "0";
-        purple_notify_info(data->connection->connection(), "Contacts and groups imported", "Number of items imported is displayed below", id.c_str());
-
-        zip_close (bak);
     } 
     catch(std::exception& e) {
         purple_notify_error(data->connection->connection(), "Failed to generate backup string", "Unable to import data from backup", e.what());
@@ -264,14 +221,15 @@ purple_debug_info ("TPL","number of entries in archive: %d\n", num);
 }
 
 // Callback for import backup action - password is read - get name of archive file next
-static void threepl_import_backup_file (threepl_actions_data* data, const char* password) {
+static void threepl_import_password (threepl_actions_data* data, const char* backup_file) {
 
-    strcpy (data->text, password);
+    strcpy (data->text, backup_file);
 
-    purple_request_file(data->gc, ("Backup file (zip-archive) to import from"),
-                         ("Contacts and groups will be imported into the buddy list."),
-                         FALSE, PURPLE_CALLBACK(threepl_import_backup_doit), NULL,
-                         data->connection->acct(), NULL, NULL, data);
+    // ask user for the password of the zip-archive
+    purple_request_input (data->gc, ("Backup Password"), ("Enter the password of the backup archive."),
+                          ("The password is required for decrypting the archive."),
+                          NULL, FALSE, TRUE, NULL, ("OK"), PURPLE_CALLBACK(threepl_import_backup_doit), ("Cancel"), NULL,
+                          data->connection->acct(), NULL, NULL, data);
 }
 
 // Callback for import backup action
@@ -285,10 +243,10 @@ static void threepl_import_backup(PurplePluginAction* action) {
     data->gc = gc;
     data->connection = connection;
 
-    // ask user for the password of the zip-archive
-    purple_request_input(gc, ("Backup Password"), ("Enter the password of the backup archive."),
-                         ("The password is required for decrypting the archive."),
-                         NULL, FALSE, TRUE, NULL, ("OK"), PURPLE_CALLBACK(threepl_import_backup_file), ("Cancel"), NULL,
+    // get backup file
+    purple_request_file (gc, ("Backup file (zip-archive) to import from"),
+                         ("Contacts and groups will be imported into the buddy list."),
+                         FALSE, PURPLE_CALLBACK(threepl_import_password), NULL,
                          connection->acct(), NULL, NULL, data);
 }
 

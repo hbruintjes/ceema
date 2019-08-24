@@ -101,7 +101,7 @@ if (${GLIB2_FOUND})
     add_library(threepl SHARED
             threepl/prpl/threepl.cpp threepl/prpl/threepl.h threepl/PrplHttpManager.cpp
             threepl/PrplHttpManager.h threepl/prpl/buddy.h threepl/prpl/buddy.cpp threepl/ThreeplConnection.cpp
-            threepl/ThreeplConnection.h
+            threepl/ThreeplConnection.h threepl/ThreeplImport.cpp threepl/ThreeplImport.h
             threepl/ContactStore.h threepl/MessageHandler.h threepl/MessageHandler.cpp threepl/ContactStore.cpp
             threepl/GroupStore.cpp threepl/GroupStore.h threepl/prpl/actions.h threepl/prpl/actions.cpp
             threepl/Transfer.h threepl/Transfer.cpp threepl/prpl/commands.h threepl/prpl/commands.cpp threepl/Logging.h threepl/Logging.cpp

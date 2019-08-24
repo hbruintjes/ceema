@@ -13,7 +13,7 @@ GList* threepl_actions(PurplePlugin *plugin, gpointer context);
 typedef struct {
   PurpleConnection*  gc;
   ThreeplConnection* connection;
-  char               text[128];
+  char               text[2048];
 } threepl_actions_data;
 
 #endif //CEEMA_ACTIONS_H
