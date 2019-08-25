@@ -100,11 +100,17 @@ the SHA-256 hash of both which can be used to validate the decryption.
 
 ## Using the Pidgin Plugin
 
-### Adding users
+### Importing users and groups
 
-Users have to be added manually via the `Add Buddy` menu in Pidgin.  It is not yet possible to import a backup from other Threema clinets
+For importing users and groups from a backup, use menu *Accounts->Threema->Import from Backup*
 
-### Adding grous
+### Adding users and groups manually
+
+#### Adding users
+
+Users have to be added manually via the `Add Buddy` menu in Pidgin.
+
+#### Adding groups
 
 When online with Pidgin while the administrator of a group creates or updates a group, this group is automatically created/updated by the plugin. However, this does not work if you are the administrator since it is not possible to be online with the same account on two devices.
 
