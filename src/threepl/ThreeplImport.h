@@ -15,22 +15,26 @@ class ThreeplImport {
     } imported;
 
     ThreeplImport (PurpleConnection* connection,
+                   ThreeplConnection* tpl_connection,
                    char* password, char* backup_file);
     
     ~ThreeplImport (void);
       
     imported import_contacts (void);
+    imported import_groups (void);
 
   private:
 
-    bool open_contacts_file (void);
+    bool open_file (const char* file_name);
     imported scan_contacts_file (void);
-    void close_contacts_file (void);
+    imported scan_groups_file (void);
+    void close_file (void);
 
     PurpleConnection* m_connection;
+    ThreeplConnection* m_tpl_connection;
     char* m_password;
     char* m_backup_file;
     zip_t* m_backup;
-    zip_file_t* m_contacts;
+    zip_file_t* m_file;
 
 };

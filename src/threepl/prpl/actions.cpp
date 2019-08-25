@@ -194,24 +194,24 @@ static void threepl_generate_backup(PurplePluginAction* action) {
 // Callback for import backup action - password/file is read - do the import
 static void threepl_import_backup_doit(threepl_actions_data* data, char* password) {
     try {
-        ThreeplImport importer (data->gc, password, data->text);
-        ThreeplImport::imported num = importer.import_contacts ();
+        ThreeplImport importer (data->gc, data->connection, password, data->text);
 
-        if (num.b_new == -1) {
-          purple_notify_error (data->connection->connection(),
-                               "Failed to import from backup",
-                               "Unable to read the backup file",
-                              data->text);
-        } else {
-          std::string result = std::to_string (num.b_new)
-                           + " new contacts imported, "
-                           + std::to_string (num.b_old)
-                           + " already exisiting";
-          purple_notify_info (data->connection->connection(), 
-                              "Contacts and groups imported",
-                              "Successfully read data from backup file",
-                              result.c_str ());
-        }
+        ThreeplImport::imported num_contacts = importer.import_contacts ();
+
+        ThreeplImport::imported num_groups = importer.import_groups ();
+
+        std::string result = std::to_string (num_contacts.b_new)
+                         + " new contacts imported, "
+                         + std::to_string (num_contacts.b_old)
+                         + " already exisiting\n"
+                         + std::to_string (num_groups.b_new)
+                         + " new groups imported, "
+                         + std::to_string (num_groups.b_old)
+                         + " already exisiting";
+        purple_notify_info (data->connection->connection(),
+                            "Contacts and groups imported",
+                            "Number of imported contacts and chats:",
+                            result.c_str ());
     } 
     catch(std::exception& e) {
         purple_notify_error(data->connection->connection(), "Failed to generate backup string", "Unable to import data from backup", e.what());
