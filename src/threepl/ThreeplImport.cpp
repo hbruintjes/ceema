@@ -319,10 +319,12 @@ bool ThreeplImport::open_file (const char* file_name)
   m_file = zip_fopen (m_backup, file_name, ZIP_FL_UNCHANGED);
 
   if (! m_file) {
+    const char *err_msg = zip_strerror (m_backup);
+    std::string err_file = std::string ("Could not read file ") + std::string (file_name);
     purple_notify_error(m_connection,
                        "Error imorting data",
-                       "Could not read file",
-                       file_name);
+                       err_file.c_str (),
+                       err_msg);
     return false;
   }
 
