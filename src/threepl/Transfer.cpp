@@ -269,10 +269,11 @@ void PrplTransfer::xfer_ack_cb(PurpleXfer *xfer, const guchar * data, size_t siz
 
 gssize PrplTransfer::xfer_read_cb(guchar ** data, PurpleXfer *xfer) {
     purple_debug_info("threepl", "xfer_read_cb\n");
-    return static_cast<PrplTransfer*>(xfer->data)->on_xfer_read(data);
 
     size_t all_read = purple_xfer_get_bytes_sent (xfer);
     purple_debug_info("threepl", "xfer_read_overall: %lu\n", all_read);
+
+    return static_cast<PrplTransfer*>(xfer->data)->on_xfer_read(data);
 }
 
 gssize PrplTransfer::xfer_write_cb(const guchar * data, size_t size, PurpleXfer *xfer) {
