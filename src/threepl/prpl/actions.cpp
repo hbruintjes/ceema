@@ -2,13 +2,17 @@
 // Created by harold on 18-3-17.
 //
 
-#include "actions.h"
 #include "threepl/ThreeplConnection.h"
-
+#include "threepl/ThreeplImport.h"
 #include <libpurple/connection.h>
+#include "actions.h"
+
 //#include <libpurple/purple.h>
 #include <contact/backup.h>
 #include <libpurple/request.h>
+#include <libpurple/debug.h>
+
+#include <zip.h>
 
 struct phone_cb_data {
     ThreeplConnection* connection;
@@ -187,6 +191,65 @@ static void threepl_generate_backup(PurplePluginAction* action) {
                          connection->acct(), NULL, NULL, connection);
 }
 
+// Callback for import backup action - password/file is read - do the import
+static void threepl_import_backup_doit(threepl_actions_data* data, char* password) {
+    try {
+        ThreeplImport importer (data->gc, data->connection, password, data->text);
+
+        ThreeplImport::imported num_contacts = importer.import_contacts ();
+
+        ThreeplImport::imported num_groups = importer.import_groups ();
+
+        std::string result = std::to_string (num_contacts.b_new)
+                         + " new contacts imported, "
+                         + std::to_string (num_contacts.b_old)
+                         + " already exisiting\n"
+                         + std::to_string (num_groups.b_new)
+                         + " new groups imported, "
+                         + std::to_string (num_groups.b_old)
+                         + " already exisiting";
+        purple_notify_info (data->connection->connection(),
+                            "Contacts and groups imported",
+                            "Number of imported contacts and chats:",
+                            result.c_str ());
+    } 
+    catch(std::exception& e) {
+        purple_notify_error(data->connection->connection(), "Failed to generate backup string", "Unable to import data from backup", e.what());
+    }
+
+    delete data;
+}
+
+// Callback for import backup action - password is read - get name of archive file next
+static void threepl_import_password (threepl_actions_data* data, const char* backup_file) {
+
+    strcpy (data->text, backup_file);
+
+    // ask user for the password of the zip-archive
+    purple_request_input (data->gc, ("Backup Password"), ("Enter the password of the backup archive."),
+                          ("The password is required for decrypting the archive."),
+                          NULL, FALSE, TRUE, NULL, ("OK"), PURPLE_CALLBACK(threepl_import_backup_doit), ("Cancel"), NULL,
+                          data->connection->acct(), NULL, NULL, data);
+}
+
+// Callback for import backup action
+static void threepl_import_backup(PurplePluginAction* action) {
+
+    PurpleConnection* gc = static_cast<PurpleConnection*>(action->context);
+    ThreeplConnection* connection = static_cast<ThreeplConnection*>(purple_connection_get_protocol_data(gc));
+
+    // initialize user data
+    threepl_actions_data* data = new threepl_actions_data ();
+    data->gc = gc;
+    data->connection = connection;
+
+    // get backup file
+    purple_request_file (gc, ("Backup file (zip-archive) to import from"),
+                         ("Contacts and groups will be imported into the buddy list."),
+                         FALSE, PURPLE_CALLBACK(threepl_import_password), NULL,
+                         connection->acct(), NULL, NULL, data);
+}
+
 GList* threepl_actions(PurplePlugin *plugin, gpointer context) {
     PurplePluginAction *act = purple_plugin_action_new(("Set Nickname..."), &threepl_set_nickname);
     GList* acts = g_list_append(NULL, act);
@@ -195,6 +258,8 @@ GList* threepl_actions(PurplePlugin *plugin, gpointer context) {
     act = purple_plugin_action_new(("Link phone number..."), &threepl_set_phone);
     acts = g_list_append(acts, act);
     act = purple_plugin_action_new(("Set revocation key..."), &threepl_set_revocation);
+    acts = g_list_append(acts, act);
+    act = purple_plugin_action_new(("Import from backup..."), &threepl_import_backup);
     acts = g_list_append(acts, act);
     act = purple_plugin_action_new(("Generate backup string..."), &threepl_generate_backup);
     return g_list_append(acts, act);

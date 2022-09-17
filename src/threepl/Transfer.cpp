@@ -194,6 +194,7 @@ ssize_t PrplDownloadTransfer::write(const unsigned char* buffer, std::size_t ava
 }
 
 void PrplDownloadTransfer::on_xfer_start() {
+    purple_debug_info("threepl", "start download\n");
     api().downloadFile(this, m_id);
 }
 
@@ -211,7 +212,9 @@ gssize PrplDownloadTransfer::on_xfer_read(guchar ** buffer) {
 void PrplDownloadTransfer::on_xfer_end() {
     // When receiving a file, upon completion decrypt it
 
+    LOG_DBG("Open downloaded file: ");
     FILE* localfile = g_fopen(purple_xfer_get_local_filename(xfer()), "wb");
+    LOG_DBG("Open downloaded file: " << (localfile != NULL));
 
     bool ok = decrypt();
     LOG_DBG("Decrypt: " << ok);
@@ -266,6 +269,10 @@ void PrplTransfer::xfer_ack_cb(PurpleXfer *xfer, const guchar * data, size_t siz
 
 gssize PrplTransfer::xfer_read_cb(guchar ** data, PurpleXfer *xfer) {
     purple_debug_info("threepl", "xfer_read_cb\n");
+
+    size_t all_read = purple_xfer_get_bytes_sent (xfer);
+    purple_debug_info("threepl", "xfer_read_overall: %lu\n", all_read);
+
     return static_cast<PrplTransfer*>(xfer->data)->on_xfer_read(data);
 }
 

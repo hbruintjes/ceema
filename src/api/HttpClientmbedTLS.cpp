@@ -22,7 +22,7 @@ namespace ceema {
         if (mbedtls_x509_crt_parse(
                 &cacert,
                 reinterpret_cast<const unsigned char*>(client.m_cert.c_str()),
-                client.m_cert.size()) != 0) {
+                client.m_cert.size() + 1) != 0) {
             status = CURLE_SSL_CERTPROBLEM;
         } else {
             mbedtls_ssl_conf_ca_chain(mbed_ctx, &cacert, nullptr);

@@ -12,6 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# A self compiled CURL lib has to be installed in /3rdparty/curl, which
+# is contained in .gitignore and is not trakced by git
+if (USE_OWN_CURL_LIB)
+    set (CURL_INCLUDE_DIRS  "${CMAKE_SOURCE_DIR}/3rdparty/curl/include")
+    set (CURL_LIBRARIES     "${CMAKE_SOURCE_DIR}/3rdparty/curl/lib/libcurl.so")
+endif ()
+
 # Include directories
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/include/
@@ -94,7 +101,7 @@ if (${GLIB2_FOUND})
     add_library(threepl SHARED
             threepl/prpl/threepl.cpp threepl/prpl/threepl.h threepl/PrplHttpManager.cpp
             threepl/PrplHttpManager.h threepl/prpl/buddy.h threepl/prpl/buddy.cpp threepl/ThreeplConnection.cpp
-            threepl/ThreeplConnection.h
+            threepl/ThreeplConnection.h threepl/ThreeplImport.cpp threepl/ThreeplImport.h
             threepl/ContactStore.h threepl/MessageHandler.h threepl/MessageHandler.cpp threepl/ContactStore.cpp
             threepl/GroupStore.cpp threepl/GroupStore.h threepl/prpl/actions.h threepl/prpl/actions.cpp
             threepl/Transfer.h threepl/Transfer.cpp threepl/prpl/commands.h threepl/prpl/commands.cpp threepl/Logging.h threepl/Logging.cpp
@@ -102,7 +109,7 @@ if (${GLIB2_FOUND})
             threepl/prpl/xfer.cpp threepl/prpl/xfer.h threepl/prpl/im.cpp threepl/prpl/im.h
             threepl/prpl/connection.h threepl/prpl/connection.cpp
             threepl/Buddy.cpp threepl/Buddy.h)
-    target_link_libraries(threepl ceema ${GLIB2_LIBRARIES})
+    target_link_libraries(threepl ceema zip ${GLIB2_LIBRARIES})
     set_property(TARGET threepl PROPERTY CXX_STANDARD 14)
     target_compile_definitions(threepl PRIVATE PURPLE_DISABLE_DEPRECATED=1)
 endif()

@@ -1,5 +1,5 @@
-Ceema
-=====
+# Ceema
+
 This is the ceema library, which provides a C++ implementation of the Threema
 communication protocol (and, in the future, a C interface to it). The aim is to
 provide a somewhat simple interface to hook the Threema protocol in client
@@ -8,8 +8,8 @@ applications such as multi-protocol IM clients.
 If you are looking for a ready-to-use desktop application, consider
 [openMittsu](https://github.com/blizzard4591/openMittsu).
 
-Building
-========
+## Building
+
 Since this is CMake based, building the library consists of the following steps
 
     git submodule init
@@ -19,8 +19,8 @@ Since this is CMake based, building the library consists of the following steps
     cmake ../
     make
 
-Dependencies
-============
+## Dependencies
+
 This library requires the following dependencies to be installed (both headers
 and libraries):
 
@@ -29,8 +29,8 @@ and libraries):
 * `openssl`
 * `sodium`
 
-Library layout
-==============
+## Library layout
+
 Under `src` you will find:
 * `client`: Structures for dealing with clients/contact. The primary class is
 `Client`, and a utility class `ContactStore`
@@ -41,23 +41,24 @@ payloads
 * `socket`: Low-level network interface
 * `types`: Type definitions used throughout the library
 
-Protocol
-========
+## Protocol
+
 The protocol is fairly straightforward. First, a client-server handshake is
 performed to set-up the encryption (using sodium/NaCl). This is handled by the
 Session class. Next, the client and
 server will communicate in (encrypted) packets as follows:
-* A (2 byte) length prefix is sent, followed by an encrypted packet
-* A packet consists of a (4 byte) type prefix, followed by an optional payload.
+
+- A (2 byte) length prefix is sent, followed by an encrypted packet
+- A packet consists of a (4 byte) type prefix, followed by an optional payload.
 There are roughtly 4 types of packets:
-  * Session status packets, indicating start (after any pending messages have
+    - Session status packets, indicating start (after any pending messages have
   been sent), or end (server generally ends the session when the client
   connects using the same credentials form another source). Normally sent by the
   server only. The end packet contains a UTF-8 encoded string payload
-  * Keep-alive/ping packets, containing an arbitrary payload that must be in the
+    - Keep-alive/ping packets, containing an arbitrary payload that must be in the
   reply. Can be sent both by the server and the client
-  * Messages (see below), identified by a random ID
-  * Acknowledgements, sent by both the server and the client in response to
+    - Messages (see below), identified by a random ID
+    - Acknowledgements, sent by both the server and the client in response to
   receiving a message, containing the sender and ID of the message being
   acknowledged. Without an acknowledgement, the server will keep retrying to
   deliver the message.
@@ -67,32 +68,60 @@ payload. They are prefixed by a (1 byte) type identifier, which determines
 the type of payload. The payload is encrypted using the keys of the sender and
 recipient, after adding padding according to PKCS#7. The following types of
 messages are known:
-  * Client message:
-    * Text: Payload is a UTF-8 encoded string.
-    * Picture
-    * Location: Payload is UTF-8 encoded string with coordinates: Two lines,
+    - Client message:
+        - Text: Payload is a UTF-8 encoded string.
+        - Picture
+        - Location: Payload is UTF-8 encoded string with coordinates: Two lines,
     separated by LF, first in decimal, then minutes
-    * Video
-    * Audio
-    * Poll
-  * User status message, either typing, or typing stopped
-  * Client message-status message, can be received, seen, agree/disagree
-  * Group message:
-    * Create
-    * Sync
-    * Leave
-    * Title
-    * Text
-    * Picture
-    * Location
-    * Video
-    * Audio
-    * Poll
+        - Video
+        - Audio
+        - Poll
+    - User status message, either typing, or typing stopped
+    - Client message-status message, can be received, seen, agree/disagree
+    - Group message:
+        - Create
+        - Sync
+        - Leave
+        - Title
+        - Text
+        - Picture
+        - Location
+        - Video
+        - Audio
+        - Poll
 
-Backup string
-=============
+## Backup string
+
 The Threema client allows for backup of the private key and client ID using a
 backup string. Its is a base32 encoded string consisting of a salt and the
 encrypted data. The salt and password generate a hash which can be used to
 decrypt the data, which will yield the client ID, private key, and 2 bytes of
 the SHA-256 hash of both which can be used to validate the decryption.
+
+## Using the Pidgin Plugin
+
+### Importing users and groups
+
+For importing users and groups from a backup, use menu *Accounts->Threema->Import from Backup*
+
+### Adding users and groups manually
+
+#### Adding users
+
+Users have to be added manually via the `Add Buddy` menu in Pidgin.
+
+#### Adding groups
+
+When online with Pidgin while the administrator of a group creates or updates a group, this group is automatically created/updated by the plugin. However, this does not work if you are the administrator since it is not possible to be online with the same account on two devices.
+
+A workaraound for this and in case that you want to add a group that already exists and is not updated by the administrator, you can enter the relevant data in Pidgin's configuration file `blist.xml`. This file is located at `~/.purple/blist.xml`. The syntax for a group entry in the buddy list is the following:
+
+    <chat proto='prpl-threepl' account='MACCOUNT'>
+      <alias>Alias</alias>
+      <component name='id'>GROUP-ID-Hex-16digits</component>
+      <component name='owner'>OACCOUNT</component>
+      <setting name='name' type='string'>Group Name</setting>
+      <setting name='members' type='string'>MEMBER01MEMBER02...MEMBERxx</setting>
+    </chat>
+
+

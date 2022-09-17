@@ -197,18 +197,18 @@ static PurplePluginProtocolInfo threepl_protocol_info =
   NULL                                 /* add_buddies_with_invite */
 };
 
+static PurplePluginInfo threepl_plugin_info = {
+    PURPLE_PLUGIN_MAGIC,
+    PURPLE_MAJOR_VERSION,
+    PURPLE_MINOR_VERSION,
+    PURPLE_PLUGIN_PROTOCOL,
+    NULL,
+    0x00,
+    NULL,
+    PURPLE_PRIORITY_DEFAULT
+};
+
 static void threepl_init(PurplePlugin *plugin) {
-    static PurplePluginInfo threepl_plugin_info = {
-        PURPLE_PLUGIN_MAGIC,
-        PURPLE_MAJOR_VERSION,
-        PURPLE_MINOR_VERSION,
-        PURPLE_PLUGIN_PROTOCOL,
-        NULL,
-        0x00,
-        NULL,
-        PURPLE_PRIORITY_DEFAULT,
-        0x00
-    };
 
     plugin->info = &threepl_plugin_info;
 

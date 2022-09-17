@@ -74,15 +74,24 @@ endforeach()
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for built executables")
 
-find_package(CURL QUIET REQUIRED)
 # Find any of OpenSSL, mbedTLS or CyaSSL, as these are currently supported for
 # CURL certificate callbacks
-option(USE_OPENSSL "Add OpenSSL support" ON)
-option(USE_MBEDTLS "Add mbedTLS/PolarSSL support" OFF)
+option(USE_OPENSSL "Add OpenSSL support" OFF)
+option(USE_MBEDTLS "Add mbedTLS/PolarSSL support" ON)
 option(USE_WOLFSSL "Add wolfSSL/cyaSSL support" OFF)
 
 if (NOT USE_OPENSSL AND NOT USE_MBEDTLS AND NOT USE_WOLFSSL)
     message(SEND_ERROR "At least one SSL library is required")
+endif ()
+
+# Give the user the possibility to provide the path to a possibly self compiled
+# CURL lib. Some linux distros have CURL with GnuTLS backend which does not
+# provide the required CURL certificate callback. Thus CURL has to be manually
+# compiled with another backend, like, e.g., mbedTLS
+option(USE_OWN_CURL_LIB "Use manually compiled CURL lib" ON)
+
+if (NOT USE_OWN_CURL_LIB)
+    find_package(CURL QUIET REQUIRED)
 endif ()
 
 if (USE_OPENSSL)
