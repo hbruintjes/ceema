@@ -21,6 +21,9 @@
 
 #include <protocol/packet/KeepAlive.h>
 
+#include <cstdint>
+#include <cstdio>
+
 namespace ceema {
 
     const unsigned PACKET_LENGTH_SIZE = sizeof(std::uint16_t);
@@ -349,7 +352,25 @@ namespace ceema {
         // Truncate MAC
         body.resize(body.size() - crypto_box_MACBYTES);
 
-        m_packetQueue.emplace_back( Packet::fromPacket(body) );
+        try
+        {
+            m_packetQueue.emplace_back( Packet::fromPacket(body) );
+        }
+        catch (const protocol_exception& e)
+        {
+            std::uintmax_t packet_type;
+            if (1 == std::sscanf(
+                e.what(), "Unexpect packet type: 0x%jx", &packet_type))
+            {
+                switch (packet_type)
+                {
+                case 0x209:
+                    LOG_TRACE(logging::loggerSession, e.what());
+                    return;
+                }
+            }
+            throw;
+        }
         LOG_TRACE(logging::loggerSession, "Got packet of type " << m_packetQueue.back()->type());
     }
 
