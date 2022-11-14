@@ -46,7 +46,7 @@ namespace ceema {
                 return std::make_unique<KeepAlive>(
                         KeepAlive::fromPacket(type, data));
             default:
-                throw protocol_exception(formatstr() << "Unexpect packet type: 0x" <<
+                throw packet_type_exception(formatstr() << "Unexpect packet type: 0x" <<
                                          std::hex << std::to_string(static_cast<unsigned>(type)));
         }
     }

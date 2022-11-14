@@ -33,6 +33,10 @@ namespace ceema {
         using std::runtime_error::runtime_error;
     };
 
+    class packet_type_exception : public protocol_exception {
+        using protocol_exception::protocol_exception;
+    };
+
     /**
      * Exception occurring when handling Threema message packets
      */
