@@ -349,7 +349,15 @@ namespace ceema {
         // Truncate MAC
         body.resize(body.size() - crypto_box_MACBYTES);
 
-        m_packetQueue.emplace_back( Packet::fromPacket(body) );
+        try
+        {
+            m_packetQueue.emplace_back( Packet::fromPacket(body) );
+        }
+        catch (const packet_type_exception& e)
+        {
+            LOG_TRACE(logging::loggerSession, e.what());
+            return;
+        }
         LOG_TRACE(logging::loggerSession, "Got packet of type " << m_packetQueue.back()->type());
     }
 
